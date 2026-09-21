@@ -6,7 +6,6 @@ import { ChevronRight, Pencil, Trash2 } from "lucide-react";
 import { Campo, Selector } from "@/components/auth/Campo";
 import { ACTIVIDADES_CON_HORARIO, HORAS_DISPONIBLES, PROFESORAS_EJEMPLO, type ClaseAdmin, type DatosClase } from "@/lib/data/clasesAdmin";
 import { getActividad, type ActividadId } from "@/lib/data/actividades";
-import { getAlumna } from "@/lib/data/admin";
 import { CAPACIDAD } from "@/lib/data/cupos";
 import { DIAS, nombreDia, type Dia } from "@/lib/data/horarios";
 import { useAdminAlumnas } from "./AdminAlumnasProvider";
@@ -27,9 +26,9 @@ export function ClaseDetalle({
   onEditar: () => void;
   onEliminar: () => void;
 }) {
-  const { datos } = useAdminAlumnas();
+  const { datos, buscar } = useAdminAlumnas();
   const anotadas = clase.alumnas
-    .map((id) => getAlumna(id))
+    .map((id) => buscar(id))
     .filter((a): a is NonNullable<typeof a> => Boolean(a))
     .map(datos)
     .sort((a, b) => a.apellido.localeCompare(b.apellido, "es") || a.nombre.localeCompare(b.nombre, "es"));

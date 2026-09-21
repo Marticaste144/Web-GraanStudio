@@ -1,4 +1,5 @@
 import { AdminHeader, Barra, Metrica, Tarjeta } from "@/components/admin/AdminUI";
+import { MetricaAlumnasActivas } from "@/components/admin/AlumnasWidgets";
 import { MetricaOcupacion, OcupacionPorActividad, OcupacionPorDia, OcupacionPorFranja } from "@/components/admin/ClasesWidgets";
 import {
   ALUMNAS_ACTIVAS,
@@ -24,7 +25,7 @@ export default function AdminMetricas() {
       <div className="mt-8 grid gap-4 min-[560px]:grid-cols-2 xl:grid-cols-4 lg:gap-5">
         <Metrica etiqueta="Ingresos del mes" valor={formatoPeso(INGRESOS_DEL_MES)} nota="cuotas aprobadas" tono="oscura" />
         <Metrica etiqueta="Pendiente de cobro" valor={formatoPeso(PENDIENTE_DE_COBRO)} nota="comprobantes por revisar" tono="sage" />
-        <Metrica etiqueta="Alumnas activas" valor={String(ALUMNAS_ACTIVAS)} nota="con al menos una clase semanal" />
+        <MetricaAlumnasActivas />
         <MetricaOcupacion nota="de todos los horarios" />
       </div>
 

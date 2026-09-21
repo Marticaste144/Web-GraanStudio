@@ -1,36 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ChevronDown, Pencil } from "lucide-react";
 import { Campo } from "@/components/auth/Campo";
+import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
 import { getActividad } from "@/lib/data/actividades";
-import type { Alumna, EstadoPago, MedioDePago } from "@/lib/data/admin";
+import type { Alumna, EstadoPago } from "@/lib/data/admin";
+import { DIAS_HASTA_VENCIMIENTO, formatoPeso } from "@/lib/data/alumna";
 import { ordenSemanal } from "@/lib/data/clasesAdmin";
+import { asistenciaDe, historialDe } from "@/lib/data/ficha";
 import { nombreDia, type Dia } from "@/lib/data/horarios";
-import type { Asistencia } from "@/lib/data/ficha";
-import { formatoPeso } from "@/lib/data/alumna";
+import { fechaCortaEnDias, fechaEnDias, fechaEnDiasProximoMes, mesHace } from "@/lib/fechas";
 import { useAdminAlumnas } from "./AdminAlumnasProvider";
 import { AdminHeader, EstadoBadge, Tarjeta } from "./AdminUI";
 import { useClasesAdmin } from "./ClasesProvider";
-
-export interface PagoFicha {
-  mes: string;
-  fecha: string;
-  monto: number;
-  medio: MedioDePago;
-  estado: EstadoPago;
-}
+import { SelectorClases } from "./SelectorClases";
 
 interface Props {
-  alumna: Alumna;
+  id: number;
+  /** La alumna de ejemplo (viene del servidor). Las dadas de alta desde el Admin se buscan en memoria. */
+  alumna: Alumna | null;
   /** "Hoy" del demo, para marcar cuál es la próxima clase */
   hoyDia: Dia;
   hoyHora: number;
-  historial: PagoFicha[];
-  vence: string;
-  asistencia: Asistencia;
 }
 
 /** Fila etiqueta / valor. Si no entra en una línea, el valor baja debajo de la etiqueta. */
@@ -57,10 +51,34 @@ const CuotaBadge = ({ estado }: { estado: EstadoPago }) =>
     <span className="inline-block whitespace-nowrap rounded-full bg-amber-soft px-3 py-1 text-xs font-medium text-amber-ink">Pendiente</span>
   );
 
-export function FichaAlumna({ alumna, hoyDia, hoyHora, historial, vence, asistencia }: Props) {
+/** Resuelve la alumna (de ejemplo o dada de alta en esta sesión) y muestra su ficha. */
+export function FichaAlumna({ id, alumna, hoyDia, hoyHora }: Props) {
+  const { nuevas } = useAdminAlumnas();
+  const encontrada = alumna ?? nuevas.find((a) => a.id === id);
+
+  if (!encontrada) {
+    return (
+      <main className="mx-auto max-w-[90rem] px-4 pb-16 pt-8 sm:px-8 lg:px-10 lg:pt-12">
+        <Link href="/admin/alumnos" className="btn btn-outline btn-sm">
+          <ArrowLeft size={15} />
+          Volver a alumnas
+        </Link>
+        <div className="mt-8 max-w-xl rounded-3xl border border-dashed border-taupe/40 bg-paper p-8 text-center sm:p-10">
+          <p className="font-serif text-3xl text-taupe-dark">No encontramos a esta alumna</p>
+          <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+            Las alumnas dadas de alta en el demo no se guardan: si se recarga la página, desaparecen.
+          </p>
+        </div>
+      </main>
+    );
+  }
+  return <FichaContenido alumna={encontrada} hoyDia={hoyDia} hoyHora={hoyHora} />;
+}
+
+function FichaContenido({ alumna, hoyDia, hoyHora }: { alumna: Alumna; hoyDia: Dia; hoyHora: number }) {
   const toast = useToast();
   const { datos, editar, alternarEstado } = useAdminAlumnas();
-  const { clases: todas } = useClasesAdmin();
+  const { clases: todas, asignarAlumna } = useClasesAdmin();
   const a = datos(alumna);
 
   // Las clases en las que está anotada salen de la lista de clases del Admin (la misma que se gestiona en Admin > Clases).
@@ -76,7 +94,25 @@ export function FichaAlumna({ alumna, hoyDia, hoyHora, historial, vence, asisten
     esProxima: c === proxima,
   }));
 
+  // Pagos, vencimiento y asistencia (datos de ejemplo). Las fechas dependen del día actual.
+  const historial = useMemo(
+    () =>
+      historialDe(alumna).map((p) => ({
+        mes: mesHace(p.mesesAtras),
+        fecha: p.sinFecha ? "—" : fechaCortaEnDias(-p.hace),
+        monto: p.monto,
+        medio: p.medio,
+        estado: p.estado,
+      })),
+    [alumna],
+  );
+  // Vencimiento de ejemplo: con la cuota pendiente, el mismo que ve la alumna en su portal;
+  // con la cuota al día, el del mes siguiente. (La regla real de vencimientos se define más adelante.)
+  const vence = alumna.estado === "Pendiente" ? fechaEnDias(DIAS_HASTA_VENCIMIENTO) : fechaEnDiasProximoMes(DIAS_HASTA_VENCIMIENTO);
+  const asistencia = asistenciaDe(alumna);
+
   const [editando, setEditando] = useState(false);
+  const [asignando, setAsignando] = useState(false);
   const [verHistorial, setVerHistorial] = useState(false);
   const historialRef = useRef<HTMLDivElement>(null);
 
@@ -118,9 +154,9 @@ export function FichaAlumna({ alumna, hoyDia, hoyHora, historial, vence, asisten
         <Link href={`/admin/pagos?q=${encodeURIComponent(nombreCompleto)}`} className="btn btn-outline btn-sm">
           Ver pagos
         </Link>
-        <Link href="/admin/clases" className="btn btn-outline btn-sm">
+        <button className="btn btn-outline btn-sm" onClick={() => setAsignando(true)}>
           Gestionar clases
-        </Link>
+        </button>
         <button
           className="btn btn-outline btn-sm"
           onClick={() => {
@@ -224,35 +260,46 @@ export function FichaAlumna({ alumna, hoyDia, hoyHora, historial, vence, asisten
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-ink-soft">Todavía no está anotada a ninguna clase.</p>
+            <div className="rounded-2xl border border-dashed border-taupe/40 px-4 py-6 text-center">
+              <p className="text-sm text-ink-soft">Todavía no está anotada a ninguna clase.</p>
+              <button className="btn btn-sage btn-sm mt-4" onClick={() => setAsignando(true)}>
+                Asignar clases
+              </button>
+            </div>
           )}
         </Tarjeta>
 
         {/* Asistencia */}
         <Tarjeta titulo="Asistencia" subtitulo="Últimas 4 semanas" tono="cream">
-          <p className="font-serif text-5xl leading-none text-taupe-dark">{asistencia.porcentaje}%</p>
-          <div
-            className="mt-4 h-2.5 overflow-hidden rounded-full bg-paper"
-            role="progressbar"
-            aria-valuenow={asistencia.porcentaje}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label="Porcentaje de asistencia"
-          >
-            <div className="h-full rounded-full bg-sage-deep" style={{ width: `${asistencia.porcentaje}%` }} />
-          </div>
-          <dl className="mt-5 grid grid-cols-3 gap-3 text-center">
-            {[
-              { t: "Programadas", v: asistencia.programadas },
-              { t: "Asistió", v: asistencia.asistio },
-              { t: "Ausencias", v: asistencia.ausencias },
-            ].map((x) => (
-              <div key={x.t} className="rounded-2xl bg-paper px-2 py-3">
-                <dd className="font-serif text-3xl leading-none text-taupe-dark">{x.v}</dd>
-                <dt className="mt-1.5 text-[0.7rem] text-ink-soft">{x.t}</dt>
+          {asistencia.programadas === 0 ? (
+            <p className="text-sm text-ink-soft">Todavía no hay asistencias registradas.</p>
+          ) : (
+            <>
+              <p className="font-serif text-5xl leading-none text-taupe-dark">{asistencia.porcentaje}%</p>
+              <div
+                className="mt-4 h-2.5 overflow-hidden rounded-full bg-paper"
+                role="progressbar"
+                aria-valuenow={asistencia.porcentaje}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label="Porcentaje de asistencia"
+              >
+                <div className="h-full rounded-full bg-sage-deep" style={{ width: `${asistencia.porcentaje}%` }} />
               </div>
-            ))}
-          </dl>
+              <dl className="mt-5 grid grid-cols-3 gap-3 text-center">
+                {[
+                  { t: "Programadas", v: asistencia.programadas },
+                  { t: "Asistió", v: asistencia.asistio },
+                  { t: "Ausencias", v: asistencia.ausencias },
+                ].map((x) => (
+                  <div key={x.t} className="rounded-2xl bg-paper px-2 py-3">
+                    <dd className="font-serif text-3xl leading-none text-taupe-dark">{x.v}</dd>
+                    <dt className="mt-1.5 text-[0.7rem] text-ink-soft">{x.t}</dt>
+                  </div>
+                ))}
+              </dl>
+            </>
+          )}
         </Tarjeta>
       </div>
 
@@ -305,6 +352,62 @@ export function FichaAlumna({ alumna, hoyDia, hoyHora, historial, vence, asisten
           </Tarjeta>
         )}
       </div>
+
+      {/* Asignar / cambiar las clases de la alumna */}
+      {asignando && (
+        <Modal titulo={`Clases de ${nombreCompleto}`} onCerrar={() => setAsignando(false)} ancho="max-w-xl">
+          <AsignarClases
+            nombre={nombreCompleto}
+            max={alumna.clasesPorSemana}
+            inicial={propias.map((c) => c.id)}
+            onGuardar={(ids) => {
+              asignarAlumna(alumna.id, ids);
+              setAsignando(false);
+              toast("Clases actualizadas.");
+            }}
+            onCancelar={() => setAsignando(false)}
+          />
+        </Modal>
+      )}
     </main>
+  );
+}
+
+function AsignarClases({
+  nombre,
+  max,
+  inicial,
+  onGuardar,
+  onCancelar,
+}: {
+  nombre: string;
+  max: number;
+  inicial: string[];
+  onGuardar: (ids: string[]) => void;
+  onCancelar: () => void;
+}) {
+  const { clases } = useClasesAdmin();
+  const [seleccion, setSeleccion] = useState<string[]>(inicial);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        onGuardar(seleccion);
+      }}
+    >
+      <p className="eyebrow">Gestionar clases</p>
+      <h2 className="mt-2 pr-10 text-[1.9rem] leading-tight text-taupe-dark sm:text-3xl">{nombre}</h2>
+      <div className="mt-6">
+        <SelectorClases clases={clases} seleccion={seleccion} onCambiar={setSeleccion} max={max} />
+      </div>
+      <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+        <button type="submit" className="btn btn-sage btn-sm">
+          Guardar clases
+        </button>
+        <button type="button" className="btn btn-outline btn-sm" onClick={onCancelar}>
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }

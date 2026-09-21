@@ -7,6 +7,8 @@ interface Props {
   /** Nombre accesible del cuadro de diálogo */
   titulo: string;
   onCerrar: () => void;
+  /** Ancho máximo en escritorio (clase de Tailwind). Por defecto, mediano. */
+  ancho?: string;
   children: React.ReactNode;
 }
 
@@ -16,7 +18,7 @@ const FOCUSABLES = 'a[href], button:not([disabled]), input:not([disabled]), sele
  * Cuadro de diálogo. En celular sube desde abajo como una hoja; en tablet y escritorio se centra.
  * Se cierra con Esc, con el fondo o con la X. Mantiene el foco adentro mientras está abierto.
  */
-export function Modal({ titulo, onCerrar, children }: Props) {
+export function Modal({ titulo, onCerrar, ancho = "max-w-lg", children }: Props) {
   const panel = useRef<HTMLDivElement>(null);
   const cerrar = useRef(onCerrar);
   cerrar.current = onCerrar;
@@ -62,13 +64,13 @@ export function Modal({ titulo, onCerrar, children }: Props) {
         aria-modal="true"
         aria-label={titulo}
         tabIndex={-1}
-        className="relative z-10 flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-line bg-paper shadow-2xl outline-none sm:max-h-[90dvh] sm:rounded-3xl"
+        className={`relative z-10 flex max-h-[92dvh] w-full ${ancho} flex-col overflow-hidden rounded-t-3xl border border-line bg-paper shadow-2xl outline-none sm:max-h-[90dvh] sm:rounded-3xl`}
       >
         <button
           type="button"
           onClick={onCerrar}
           aria-label="Cerrar"
-          className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full text-ink-soft transition-colors hover:bg-cream-alt hover:text-taupe-dark"
+          className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-paper text-ink-soft shadow-sm ring-1 ring-line transition-colors hover:bg-cream-alt hover:text-taupe-dark"
         >
           <X size={20} />
         </button>

@@ -14,6 +14,8 @@ interface Estado {
   crear: (datos: DatosClase) => Resultado;
   editar: (id: string, datos: DatosClase) => Resultado;
   eliminar: (id: string) => void;
+  /** Deja a la alumna anotada exactamente en las clases indicadas (suma las nuevas y saca las demás). */
+  asignarAlumna: (alumnaId: number, claseIds: string[]) => void;
 }
 
 const Ctx = createContext<Estado | null>(null);
@@ -62,7 +64,23 @@ export function ClasesProvider({ children }: { children: React.ReactNode }) {
 
   const eliminar = useCallback((id: string) => setClases((prev) => prev.filter((c) => c.id !== id)), []);
 
-  const value = useMemo<Estado>(() => ({ clases, crear, editar, eliminar }), [clases, crear, editar, eliminar]);
+  const asignarAlumna = useCallback<Estado["asignarAlumna"]>((alumnaId, claseIds) => {
+    setClases((prev) =>
+      prev.map((c) => {
+        const quiere = claseIds.includes(c.id);
+        const esta = c.alumnas.includes(alumnaId);
+        // Solo se suma a una clase con lugar (el formulario ya no deja elegir las completas).
+        if (quiere && !esta && c.alumnas.length < c.cupo) return { ...c, alumnas: [...c.alumnas, alumnaId] };
+        if (!quiere && esta) return { ...c, alumnas: c.alumnas.filter((id) => id !== alumnaId) };
+        return c;
+      }),
+    );
+  }, []);
+
+  const value = useMemo<Estado>(
+    () => ({ clases, crear, editar, eliminar, asignarAlumna }),
+    [clases, crear, editar, eliminar, asignarAlumna],
+  );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

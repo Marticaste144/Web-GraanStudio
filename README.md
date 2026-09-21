@@ -15,7 +15,7 @@ y las acciones (anotarse, cargar comprobante, etc.) solo simulan el éxito en me
 - `/` landing pública
 - `/login` · `/registro` (simulados: entran al portal sin validar nada)
 - `/alumno` · `/alumno/mis-clases` · `/alumno/ver-clases` (Reservar) · `/alumno/cuota` · `/alumno/perfil`
-- `/admin` · `/admin/alumnos` · `/admin/alumnos/[id]` (ficha de alumna) · `/admin/clases` · `/admin/pagos` · `/admin/metricas` (sin login, solo para mostrar). En Admin > Clases se pueden crear, ver, editar y eliminar clases; los cambios se hacen en memoria y no se guardan
+- `/admin` · `/admin/alumnos` · `/admin/alumnos/[id]` (ficha de alumna) · `/admin/clases` · `/admin/pagos` · `/admin/metricas` (sin login, solo para mostrar). En Admin > Clases se pueden crear, ver, editar y eliminar clases, y en Admin > Alumnos dar de alta alumnas (con sus clases); los cambios se hacen en memoria y no se guardan
 
 Flujo: Landing → Iniciar sesión / Crear cuenta → Portal de alumna → Ver clases → Reservar.
 "Iniciar sesión" entra como Sofía (con 3 clases). "Crear cuenta" arranca un portal vacío con el nombre que se escriba.

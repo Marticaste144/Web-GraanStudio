@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { AdminHeader, EstadoBadge, Metrica, Tarjeta } from "@/components/admin/AdminUI";
+import { MetricaAlumnasActivas } from "@/components/admin/AlumnasWidgets";
 import { AgendaHoy, MetricaClasesHoy, MetricaOcupacion, OcupacionPorActividad } from "@/components/admin/ClasesWidgets";
 import { Importe } from "@/components/ui/Importe";
 import {
-  ALUMNAS_ACTIVAS,
   INGRESOS_DEL_MES,
   PAGOS_PENDIENTES,
   PAGOS_RECIENTES,
@@ -35,7 +35,7 @@ export default async function AdminInicio({ searchParams }: { searchParams: Prom
       />
 
       <div className="mt-8 grid gap-4 min-[560px]:grid-cols-2 xl:grid-cols-4 lg:gap-5">
-        <Metrica etiqueta="Alumnas activas" valor={String(ALUMNAS_ACTIVAS)} nota="con al menos una clase semanal" />
+        <MetricaAlumnasActivas />
         <Metrica etiqueta="Ingresos del mes" valor={formatoPeso(INGRESOS_DEL_MES)} nota="cuotas aprobadas" tono="oscura" />
         <MetricaOcupacion nota="de todos los horarios de la semana" tono="sage" />
         <MetricaClasesHoy dia={hoy.dia} />

@@ -5,6 +5,7 @@ import { Check, Search } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import type { EstadoPago, Pago } from "@/lib/data/admin";
 import { formatoPeso } from "@/lib/data/alumna";
+import { useAdminAlumnas } from "./AdminAlumnasProvider";
 import { EstadoBadge, Metrica, Tarjeta } from "./AdminUI";
 
 type Filtro = "todos" | EstadoPago;
@@ -20,8 +21,11 @@ export type PagoConFecha = Pago & { fecha: string };
 
 const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
-export function PagosLista({ pagos, busquedaInicial = "" }: { pagos: PagoConFecha[]; busquedaInicial?: string }) {
+export function PagosLista({ pagos: pagosBase, busquedaInicial = "" }: { pagos: PagoConFecha[]; busquedaInicial?: string }) {
   const toast = useToast();
+  const { nuevas, datos } = useAdminAlumnas();
+  // Las alumnas dadas de alta en el Admin tienen su cuota del mes pendiente y todavía no registraron pago (sin fecha).
+  const pagos: PagoConFecha[] = [...nuevas.map((a) => ({ ...datos(a), fecha: "—" })), ...pagosBase];
   // Solo en memoria: aprobar un pago cambia el estado visual, no guarda nada.
   const [aprobados, setAprobados] = useState<Set<number>>(new Set());
   const [filtro, setFiltro] = useState<Filtro>("todos");

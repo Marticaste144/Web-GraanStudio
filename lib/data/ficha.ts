@@ -17,6 +17,8 @@ export interface Asistencia {
 
 /** Resumen de las últimas 4 semanas. Solo cuenta asistencias y ausencias. */
 export function asistenciaDe(a: Alumna): Asistencia {
+  // Una alumna recién dada de alta todavía no tiene asistencias registradas.
+  if (a.altaManual) return { programadas: 0, asistio: 0, ausencias: 0, porcentaje: 0 };
   const programadas = a.clasesPorSemana * 4;
   const ausencias = a.id % 4 === 0 ? 2 : a.id % 3 === 0 ? 1 : 0;
   const asistio = programadas - ausencias;
@@ -42,6 +44,8 @@ export interface PagoHistorial {
   monto: number;
   medio: MedioDePago;
   estado: EstadoPago;
+  /** true = todavía no se registró ningún pago (no hay fecha que mostrar) */
+  sinFecha?: boolean;
 }
 
 /** Últimos pagos (hasta 6 meses, sin pasar del mes de alta). Mismo plan e importe que el actual. */
@@ -53,5 +57,6 @@ export function historialDe(a: Alumna): PagoHistorial[] {
     monto: a.monto,
     medio: a.medio,
     estado: k === 0 ? a.estado : "Aprobado",
+    sinFecha: k === 0 && Boolean(a.altaManual),
   }));
 }

@@ -20,21 +20,30 @@ const PAGINA = 15;
 
 const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
-const Inactiva = () => (
-  <span className="ml-2 whitespace-nowrap rounded-full bg-cream-alt px-2 py-0.5 align-middle text-[0.65rem] font-medium uppercase tracking-wider text-ink-soft">
-    Inactiva
-  </span>
+const Etiquetas = ({ a }: { a: { activa: boolean; altaManual?: boolean } }) => (
+  <>
+    {a.altaManual && (
+      <span className="ml-2 whitespace-nowrap rounded-full bg-sage-soft px-2 py-0.5 align-middle text-[0.65rem] font-medium uppercase tracking-wider text-sage-deep">
+        Nueva
+      </span>
+    )}
+    {!a.activa && (
+      <span className="ml-2 whitespace-nowrap rounded-full bg-cream-alt px-2 py-0.5 align-middle text-[0.65rem] font-medium uppercase tracking-wider text-ink-soft">
+        Inactiva
+      </span>
+    )}
+  </>
 );
 
 export function AlumnosLista({ alumnas }: { alumnas: Alumna[] }) {
   const router = useRouter();
-  const { datos } = useAdminAlumnas();
+  const { datos, nuevas } = useAdminAlumnas();
   const [busqueda, setBusqueda] = useState("");
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [visibles, setVisibles] = useState(PAGINA);
 
-  // Con los cambios del demo aplicados (nombre, email, estado…)
-  const lista = alumnas.map(datos);
+  // Las recién dadas de alta van primero. Con los cambios del demo aplicados (nombre, email, estado…)
+  const lista = [...nuevas, ...alumnas].map(datos);
 
   const filtradas = useMemo(() => {
     const q = norm(busqueda.trim());
@@ -98,7 +107,7 @@ export function AlumnosLista({ alumnas }: { alumnas: Alumna[] }) {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-taupe-dark">
                       {a.nombre} {a.apellido}
-                      {!a.activa && <Inactiva />}
+                      <Etiquetas a={a} />
                     </p>
                     <p className="mt-1 break-all text-xs text-ink-soft">{a.email}</p>
                     <p className="mt-1 text-xs text-ink-soft">{a.plan}</p>
@@ -136,7 +145,7 @@ export function AlumnosLista({ alumnas }: { alumnas: Alumna[] }) {
                     >
                       {a.nombre} {a.apellido}
                     </Link>
-                    {!a.activa && <Inactiva />}
+                    <Etiquetas a={a} />
                     <p className="mt-0.5 text-xs text-ink-soft">{a.email}</p>
                   </td>
                   <td className="py-3.5 pr-4 text-ink-soft">{a.plan}</td>

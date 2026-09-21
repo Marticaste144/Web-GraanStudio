@@ -25,7 +25,12 @@ export interface Alumna {
   /** Hace cuántos días se registró el pago (o se cargó el comprobante) */
   hace: number;
   desde: string;
+  /** true = alumna dada de alta manualmente desde el Admin (todavía sin pagos ni asistencias) */
+  altaManual?: boolean;
 }
+
+/** Las alumnas dadas de alta desde el Admin usan ids desde este número, para no chocar con las de ejemplo. */
+export const PRIMER_ID_ALTA_MANUAL = 1000;
 
 /** Id de Sofía Benítez, la alumna con la que se entra al portal (tercera de la lista). */
 export const SOFIA_ID = 3;
