@@ -10,7 +10,7 @@ export function Clases() {
           eyebrow="Nuestras clases"
           titulo={
             <>
-              Ocho formas de <span className="italic text-sage-dark">moverte</span>
+              Ocho formas de <span className="italic text-sage-deep">moverte</span>
             </>
           }
           descripcion="Elegís tus días y horarios, y venís a la misma clase cada semana, con tu grupo y tu profesora."
@@ -24,11 +24,11 @@ export function Clases() {
               <div className="flex-1">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-[1.7rem] text-taupe-dark">{a.nombre}</h3>
-                  <ActividadIcon icono={a.icono} size={24} className="shrink-0 text-sage-dark" />
+                  <ActividadIcon icono={a.icono} size={24} className="shrink-0 text-sage-deep" />
                 </div>
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{a.descripcion}</p>
                 {a.aConsulta && (
-                  <p className="mt-3 text-xs font-medium uppercase tracking-[0.15em] text-sage-dark">
+                  <p className="mt-3 text-xs font-medium uppercase tracking-[0.15em] text-sage-deep">
                     Se coordina a consulta
                   </p>
                 )}

@@ -7,22 +7,23 @@ import { useAlumno } from "./AlumnoProvider";
 import { CuotaResumen } from "./CuotaResumen";
 import { HoyCard } from "./HoyCard";
 import { PageHeader } from "./PageHeader";
-import { SemanaAlumna } from "./SemanaAlumna";
 
 const ACCESOS = [
-  { href: "/alumno/mis-clases", titulo: "Mis clases", texto: "Tus clases semanales", icon: CalendarDays },
-  { href: "/alumno/ver-clases", titulo: "Ver clases", texto: "Horarios y lugares disponibles", icon: Search },
-  { href: "/alumno/cuota", titulo: "Mi cuota", texto: "Estado del mes y datos de pago", icon: CreditCard },
+  { href: "/alumno/mis-clases", titulo: "Mis clases", texto: "Tu semana completa", icon: CalendarDays },
+  { href: "/alumno/ver-clases", titulo: "Ver clases", texto: "Horarios y lugares", icon: Search },
+  { href: "/alumno/cuota", titulo: "Mi cuota", texto: "Estado y datos de pago", icon: CreditCard },
 ];
 
 interface Props {
   dia: Dia;
   etiqueta: string;
+  hora: number;
   mes: string;
   vence: string;
 }
 
-export function InicioVista({ dia, etiqueta, mes, vence }: Props) {
+/** Inicio compacto: próxima clase, clases de hoy, resumen de cuota y accesos. La semana completa está en "Mis clases". */
+export function InicioVista({ dia, etiqueta, hora, mes, vence }: Props) {
   const { usuario } = useAlumno();
 
   return (
@@ -31,7 +32,7 @@ export function InicioVista({ dia, etiqueta, mes, vence }: Props) {
         eyebrow={usuario.esNueva ? "Bienvenida a Graan Studio" : "Tu espacio"}
         titulo={
           <>
-            Hola, <span className="italic text-sage-dark">{usuario.nombre}</span>
+            Hola, <span className="italic text-sage-deep">{usuario.nombre}</span>
           </>
         }
         accion={
@@ -41,39 +42,36 @@ export function InicioVista({ dia, etiqueta, mes, vence }: Props) {
         }
       />
 
-      {/* Grilla: 1 columna en celular · 2 en tablet · 12 en escritorio */}
-      <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-12 lg:gap-6">
-        <div className="md:col-span-2 lg:col-span-8 lg:col-start-1 lg:row-start-1">
-          <HoyCard dia={dia} etiqueta={etiqueta} />
+      <div className="mt-6 grid gap-4 lg:grid-cols-12 lg:gap-5">
+        <div className="lg:col-span-8">
+          <HoyCard dia={dia} etiqueta={etiqueta} hora={hora} />
         </div>
-        <div className="lg:col-span-4 lg:col-start-9 lg:row-start-1">
+        <div className="lg:col-span-4">
           <CuotaResumen mes={mes} vence={vence} />
         </div>
-        <nav
-          aria-label="Accesos"
-          className="rounded-3xl border border-line bg-paper px-6 py-2 max-md:order-4 sm:px-8 lg:col-span-4 lg:col-start-9 lg:row-start-2"
-        >
-          <ul className="divide-y divide-line">
-            {ACCESOS.map(({ href, titulo, texto, icon: Icon }) => (
-              <li key={href}>
-                <Link href={href} className="group flex items-center gap-4 py-5">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-cream-alt text-taupe-dark">
-                    <Icon size={20} strokeWidth={1.5} />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-serif text-xl leading-tight text-taupe-dark">{titulo}</span>
-                    <span className="mt-1 block text-xs text-ink-soft">{texto}</span>
-                  </span>
-                  <ArrowRight size={18} className="shrink-0 text-taupe transition-transform group-hover:translate-x-1" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        <div className="max-md:order-3 md:col-span-2 lg:col-span-8 lg:col-start-1 lg:row-start-2">
-          <SemanaAlumna hoy={dia} />
-        </div>
       </div>
+
+      <nav aria-label="Accesos rápidos" className="mt-4 lg:mt-5">
+        <ul className="grid gap-3 sm:grid-cols-3 lg:gap-5">
+          {ACCESOS.map(({ href, titulo, texto, icon: Icon }) => (
+            <li key={href}>
+              <Link
+                href={href}
+                className="group flex items-center gap-4 rounded-2xl border border-line bg-paper px-4 py-3.5 transition-colors hover:border-sage-deep sm:px-5"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sage-soft text-sage-deep">
+                  <Icon size={19} strokeWidth={1.6} />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-serif text-lg leading-tight text-taupe-dark">{titulo}</span>
+                  <span className="block text-xs text-ink-soft">{texto}</span>
+                </span>
+                <ArrowRight size={17} className="shrink-0 text-taupe transition-transform group-hover:translate-x-1" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </main>
   );
 }

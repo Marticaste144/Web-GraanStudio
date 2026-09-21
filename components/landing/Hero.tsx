@@ -8,7 +8,7 @@ export function Hero() {
         <div>
           <p className="eyebrow">Guillermo E. Hudson · Buenos Aires</p>
           <h1 className="mt-5 text-[2.7rem] leading-[1.05] text-taupe-dark sm:text-6xl lg:text-[4.4rem] xl:text-[5rem]">
-            Pilates &amp; Yoga <span className="block italic text-sage-dark">en un solo lugar</span>
+            Pilates &amp; Yoga <span className="block italic text-sage-deep">en un solo lugar</span>
           </h1>
           <p className="mt-7 max-w-md text-base leading-relaxed text-ink-soft md:text-lg">
             Un estudio boutique para moverte con calma y con técnica. Grupos reducidos, profesoras

@@ -1,45 +1,37 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BarChart3, CalendarDays, CreditCard, LayoutDashboard, Users, type LucideProps } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
-import { useToast } from "@/components/ui/Toast";
 
-const ITEMS: { label: string; icon: React.ComponentType<LucideProps>; href?: string }[] = [
+const ITEMS: { label: string; icon: React.ComponentType<LucideProps>; href: string }[] = [
   { label: "Inicio", icon: LayoutDashboard, href: "/admin" },
-  { label: "Alumnos", icon: Users },
-  { label: "Clases", icon: CalendarDays },
-  { label: "Pagos", icon: CreditCard },
-  { label: "Métricas", icon: BarChart3 },
+  { label: "Alumnos", icon: Users, href: "/admin/alumnos" },
+  { label: "Clases", icon: CalendarDays, href: "/admin/clases" },
+  { label: "Pagos", icon: CreditCard, href: "/admin/pagos" },
+  { label: "Métricas", icon: BarChart3, href: "/admin/metricas" },
 ];
 
 export function AdminSidebar() {
-  const toast = useToast();
+  const pathname = usePathname();
+  const esActivo = (href: string) => (href === "/admin" ? pathname === "/admin" : pathname.startsWith(href));
 
   const item = (it: (typeof ITEMS)[number], compacto: boolean) => {
     const Icon = it.icon;
-    const activo = Boolean(it.href);
-    const clases = `flex items-center gap-3 rounded-full text-sm transition-colors ${
-      compacto ? "shrink-0 px-4 py-2.5" : "px-5 py-3"
-    } ${activo ? "bg-taupe-dark text-cream" : "text-ink-soft hover:bg-cream-alt hover:text-taupe-dark"}`;
-    const contenido = (
-      <>
+    const on = esActivo(it.href);
+    return (
+      <Link
+        key={it.href}
+        href={it.href}
+        aria-current={on ? "page" : undefined}
+        className={`flex items-center gap-3 rounded-full text-sm transition-colors ${
+          compacto ? "px-3.5 py-2" : "px-5 py-3"
+        } ${on ? "bg-taupe-dark text-cream" : "text-ink-soft hover:bg-cream-alt hover:text-taupe-dark"}`}
+      >
         <Icon size={18} strokeWidth={1.5} />
         {it.label}
-      </>
-    );
-    return activo ? (
-      <Link key={it.label} href={it.href!} className={clases} aria-current="page">
-        {contenido}
       </Link>
-    ) : (
-      <button
-        key={it.label}
-        className={`${clases} ${compacto ? "" : "w-full text-left"}`}
-        onClick={() => toast("Esta sección se incluye en la versión completa.")}
-      >
-        {contenido}
-      </button>
     );
   };
 
@@ -65,7 +57,7 @@ export function AdminSidebar() {
             ← Sitio
           </Link>
         </div>
-        <nav aria-label="Administración" className="no-scrollbar -mx-4 mt-3 flex gap-1 overflow-x-auto px-4 sm:-mx-8 sm:px-8">
+        <nav aria-label="Administración" className="mt-3 flex flex-wrap gap-1.5">
           {ITEMS.map((it) => item(it, true))}
         </nav>
       </div>

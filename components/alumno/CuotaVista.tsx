@@ -35,13 +35,13 @@ export function CuotaVista({ mes, vence }: { mes: string; vence: string }) {
     <main>
       <PageHeader eyebrow="Mi cuota" titulo="Tu cuota mensual" subtitulo="Estado del mes y datos para abonar por transferencia." />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:gap-8">
+      <div className="mt-6 grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2 lg:gap-5">
         {/* Estado de la cuota + comprobante */}
-        <div className="space-y-5">
-          <section className="rounded-3xl border border-line bg-paper p-6 sm:p-8">
+        <div className="space-y-4">
+          <section className="rounded-3xl border border-sage/40 bg-sage-soft p-5 sm:p-7">
             {plan ? (
               <>
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-3">
                   <div>
                     <p className="eyebrow">Cuota de {mes}</p>
                     <p className="mt-4 font-serif text-5xl leading-none text-taupe-dark sm:text-6xl">
@@ -51,7 +51,7 @@ export function CuotaVista({ mes, vence }: { mes: string; vence: string }) {
                   </div>
                   <EstadoCuota enRevision={Boolean(comprobante)} />
                 </div>
-                <p className="mt-6 flex items-center gap-2 border-t border-line pt-4 text-sm text-ink-soft">
+                <p className="mt-6 flex items-center gap-2 border-t border-sage/40 pt-4 text-sm text-ink-soft">
                   <CalendarClock size={16} className="shrink-0 text-taupe" />
                   {comprobante ? "Recibimos tu comprobante y lo estamos revisando." : `Próximo vencimiento: ${vence}`}
                 </p>
@@ -85,15 +85,15 @@ export function CuotaVista({ mes, vence }: { mes: string; vence: string }) {
                 }}
               />
               {comprobante ? (
-                <div className="pop flex items-center gap-4 rounded-2xl border border-sage/50 bg-sage-soft/60 p-4 sm:p-5">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sage-dark text-white">
+                <div className="pop flex items-center gap-4 rounded-2xl border border-sage-deep/40 bg-sage-mist p-4 sm:p-5">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-sage-deep text-white">
                     <Check size={20} strokeWidth={2.5} />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium text-taupe-dark">Comprobante cargado</p>
                     <p className="mt-0.5 flex items-center gap-1.5 text-xs text-ink-soft">
                       <FileCheck2 size={13} className="shrink-0" />
-                      <span className="truncate">{comprobante}</span>
+                      <span className="break-all">{comprobante}</span>
                     </p>
                   </div>
                   <button
@@ -104,7 +104,7 @@ export function CuotaVista({ mes, vence }: { mes: string; vence: string }) {
                   </button>
                 </div>
               ) : (
-                <button onClick={() => inputRef.current?.click()} className="btn btn-primary w-full py-4">
+                <button onClick={() => inputRef.current?.click()} className="btn btn-sage w-full py-4">
                   <Upload size={18} />
                   Cargar comprobante
                 </button>
@@ -114,7 +114,7 @@ export function CuotaVista({ mes, vence }: { mes: string; vence: string }) {
         </div>
 
         {/* Datos de transferencia */}
-        <section className="rounded-3xl border border-line bg-paper p-6 sm:p-8">
+        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-7">
           <h2 className="text-2xl text-taupe-dark sm:text-3xl">Datos para transferir</h2>
           <dl className="mt-5 divide-y divide-line border-y border-line">
             {CAMPOS.map(({ clave, label }) => (

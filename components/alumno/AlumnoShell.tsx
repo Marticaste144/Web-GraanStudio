@@ -69,7 +69,7 @@ export function AlumnoShell({ children }: { children: React.ReactNode }) {
             >
               <span
                 className={`grid h-10 w-10 place-items-center rounded-full font-serif text-lg transition-colors ${
-                  enPerfil ? "bg-taupe-dark text-cream" : "bg-sage-soft text-sage-dark group-hover:bg-sage/40"
+                  enPerfil ? "bg-taupe-dark text-cream" : "bg-sage-soft text-sage-deep group-hover:bg-sage/40"
                 }`}
               >
                 {usuario.nombre[0]}

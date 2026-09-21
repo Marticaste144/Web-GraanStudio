@@ -2,19 +2,25 @@
 
 /* Paleta y tipografías de Graan Studio */
 @theme {
+  /* Marca */
   --color-taupe: #7a6a58;
   --color-taupe-dark: #5c4f40;
   --color-sage: #8fa79b;
   --color-sage-dark: #6e8a7e;
-  --color-cream: #f7f3ec;
-  --color-cream-alt: #efe8dc;
-  --color-paper: #fbf9f4;
-  --color-ink: #3a322a;
-  --color-ink-soft: #7a6f63;
-  --color-line: #e2d9ca;
-  --color-amber-soft: #f3e2bd;
-  --color-amber-ink: #8a6210;
-  --color-sage-soft: #dde7e1;
+  /* Verde profundo: derivado del salvia de la marca, para botones y texto sobre fondos claros */
+  --color-sage-deep: #4f6b5f;
+  --color-sage-soft: #d5e2da;
+  --color-sage-mist: #e9f0ec;
+  /* Fondos: crema de página, crema alternativo y blanco cálido para tarjetas */
+  --color-cream: #f6f1e8;
+  --color-cream-alt: #ebe2d3;
+  --color-paper: #fffdf9;
+  --color-ink: #332c25;
+  --color-ink-soft: #5f5549;
+  --color-line: #d9cdba;
+  /* Estados */
+  --color-amber-soft: #f3dfb2;
+  --color-amber-ink: #7a5408;
 }
 
 @theme inline {
@@ -70,7 +76,7 @@
     font-weight: 500;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--color-taupe);
+    color: var(--color-taupe-dark);
   }
 
   .btn {
@@ -99,8 +105,16 @@
   .btn-primary:hover {
     background: var(--color-ink);
   }
+  /* Acción principal dentro de listas (Anotarme, Consultar…): verde profundo de la marca */
+  .btn-sage {
+    background: var(--color-sage-deep);
+    color: #fff;
+  }
+  .btn-sage:hover {
+    background: #3f574d;
+  }
   .btn-outline {
-    border: 1px solid var(--color-taupe);
+    border: 1px solid var(--color-taupe-dark);
     color: var(--color-taupe-dark);
   }
   .btn-outline:hover {
@@ -108,7 +122,8 @@
     color: var(--color-cream);
   }
   .btn-sm {
-    padding: 0.5rem 1.1rem;
+    padding: 0.55rem 1.15rem;
+    white-space: nowrap;
     font-size: 0.78rem;
   }
 

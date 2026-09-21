@@ -19,7 +19,7 @@ export function LoginForm({ destino }: { destino: string }) {
       eyebrow="Portal de alumnas"
       titulo={
         <>
-          Iniciar <span className="italic text-sage-dark">sesión</span>
+          Iniciar <span className="italic text-sage-deep">sesión</span>
         </>
       }
       descripcion="Ingresá para ver tus clases, reservar horarios y consultar tu cuota."

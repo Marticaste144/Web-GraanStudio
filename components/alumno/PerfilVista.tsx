@@ -20,8 +20,8 @@ export function PerfilVista() {
     <main>
       <PageHeader eyebrow="Perfil" titulo="Tus datos" />
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-8">
-        <section className="flex flex-col items-center rounded-3xl bg-taupe-dark p-8 text-center text-cream sm:p-10">
+      <div className="mt-6 grid gap-4 lg:grid-cols-[20rem_minmax(0,1fr)] lg:gap-5">
+        <section className="flex flex-col items-center rounded-3xl bg-taupe-dark p-7 text-center text-cream sm:p-8">
           <span
             className="grid h-24 w-24 place-items-center rounded-full bg-cream font-serif text-5xl text-taupe-dark"
             aria-hidden
@@ -38,7 +38,7 @@ export function PerfilVista() {
           </Link>
         </section>
 
-        <section className="rounded-3xl border border-line bg-paper p-6 sm:p-8">
+        <section className="rounded-3xl border border-line bg-paper p-5 sm:p-7">
           <h2 className="text-2xl text-taupe-dark sm:text-3xl">Información personal</h2>
           <dl className="mt-5 divide-y divide-line border-y border-line">
             {datos.map((d) => (

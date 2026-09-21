@@ -38,14 +38,14 @@ export function Ubicacion() {
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(direccionCompleta())}`;
 
   return (
-    <section id="ubicacion" className="bg-cream-alt">
+    <section id="ubicacion" className="border-y border-sage/40 bg-sage-mist">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-24 md:grid-cols-2 md:px-8">
         <div>
           <SectionTitle
             eyebrow="Ubicación"
             titulo={
               <>
-                Encontranos en <span className="italic text-sage-dark">Hudson</span>
+                Encontranos en <span className="italic text-sage-deep">Hudson</span>
               </>
             }
           />

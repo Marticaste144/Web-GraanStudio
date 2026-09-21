@@ -18,7 +18,7 @@ export function RegistroForm() {
       eyebrow="Sumate a Graan Studio"
       titulo={
         <>
-          Crear <span className="italic text-sage-dark">cuenta</span>
+          Crear <span className="italic text-sage-deep">cuenta</span>
         </>
       }
       descripcion="Es gratis. Con tu cuenta podés elegir tus clases y seguir tu cuota."

@@ -13,6 +13,7 @@ export default async function AlumnoInicio({ searchParams }: { searchParams: Pro
     <InicioVista
       dia={hoy.dia}
       etiqueta={hoy.etiqueta}
+      hora={hoy.hora}
       mes={mesActual()}
       vence={fechaEnDias(DIAS_HASTA_VENCIMIENTO)}
     />

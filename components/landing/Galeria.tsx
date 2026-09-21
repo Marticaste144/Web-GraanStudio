@@ -17,7 +17,7 @@ export function Galeria() {
         eyebrow="Galería"
         titulo={
           <>
-            Momentos en <span className="italic text-sage-dark">Graan Studio</span>
+            Momentos en <span className="italic text-sage-deep">Graan Studio</span>
           </>
         }
       />

@@ -12,6 +12,8 @@ export interface DiaDemo {
   dia: Dia;
   /** Etiqueta para mostrar: "Lunes 21 de septiembre" o solo "Lunes" si el día está forzado. */
   etiqueta: string;
+  /** Hora actual (0–23). Es 0 cuando el día es "de demostración" (forzado o fin de semana). */
+  hora: number;
 }
 
 /**
@@ -23,14 +25,14 @@ export interface DiaDemo {
 export function resolverDia(param?: string | string[]): DiaDemo {
   const forzado = (Array.isArray(param) ? param[0] : param)?.toLowerCase();
   const encontrado = DIAS.find((d) => d.id === sinTildes(forzado ?? ""));
-  if (encontrado) return { dia: encontrado.id, etiqueta: encontrado.nombre };
+  if (encontrado) return { dia: encontrado.id, etiqueta: encontrado.nombre, hora: 0 };
 
   const ahora = new Date();
   const nombre = sinTildes(
     new Intl.DateTimeFormat("es-AR", { weekday: "long", timeZone: TZ }).format(ahora),
   );
   const real = DIAS.find((d) => d.id === nombre);
-  if (!real) return { dia: "lunes", etiqueta: "Lunes" };
+  if (!real) return { dia: "lunes", etiqueta: "Lunes", hora: 0 };
 
   const fecha = new Intl.DateTimeFormat("es-AR", {
     weekday: "long",
@@ -38,7 +40,10 @@ export function resolverDia(param?: string | string[]): DiaDemo {
     month: "long",
     timeZone: TZ,
   }).format(ahora);
-  return { dia: real.id, etiqueta: capitalizar(fecha) };
+  const hora = Number(
+    new Intl.DateTimeFormat("es-AR", { hour: "numeric", hourCycle: "h23", timeZone: TZ }).format(ahora),
+  );
+  return { dia: real.id, etiqueta: capitalizar(fecha), hora };
 }
 
 /** Mes actual en texto, ej: "Septiembre 2026". */
@@ -51,7 +56,17 @@ export function mesActual(): string {
   return capitalizar(s.replace(" de ", " "));
 }
 
-/** Fecha a N días desde hoy, ej: "25 de septiembre". */
+/** Nombres cortos de los últimos `n` meses (el último es el actual), ej: ["Abr", …, "Sep"]. */
+export function ultimosMeses(n: number): string[] {
+  const base = new Date();
+  return Array.from({ length: n }, (_, k) => {
+    const d = new Date(base.getFullYear(), base.getMonth() - (n - 1 - k), 15);
+    const corto = new Intl.DateTimeFormat("es-AR", { month: "short", timeZone: TZ }).format(d);
+    return capitalizar(corto.replace(".", ""));
+  });
+}
+
+/** Fecha a N días desde hoy (N puede ser negativo), ej: "25 de septiembre". */
 export function fechaEnDias(n: number): string {
   const d = new Date(Date.now() + n * 24 * 60 * 60 * 1000);
   return new Intl.DateTimeFormat("es-AR", {
@@ -59,4 +74,12 @@ export function fechaEnDias(n: number): string {
     month: "long",
     timeZone: TZ,
   }).format(d);
+}
+
+/** Fecha corta a N días desde hoy (N puede ser negativo), ej: "17 sep". */
+export function fechaCortaEnDias(n: number): string {
+  const d = new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+  return new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "short", timeZone: TZ })
+    .format(d)
+    .replace(".", "");
 }

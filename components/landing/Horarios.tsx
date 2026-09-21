@@ -6,8 +6,8 @@ import { DIAS, GRILLA, HORA_SIN_ACTIVIDAD, type Dia } from "@/lib/data/horarios"
 import { SectionTitle } from "./SectionTitle";
 
 const TINTE: Record<Familia, string> = {
-  pilates: "bg-taupe/10 border-taupe",
-  yoga: "bg-sage-soft border-sage-dark",
+  pilates: "bg-taupe/15 border-taupe",
+  yoga: "bg-sage-soft border-sage-deep",
   esfera: "bg-amber-soft/60 border-amber-ink/60",
 };
 
@@ -34,7 +34,7 @@ export function Horarios() {
         eyebrow="Horarios"
         titulo={
           <>
-            Tu semana en <span className="italic text-sage-dark">Graan</span>
+            Tu semana en <span className="italic text-sage-deep">Graan</span>
           </>
         }
         descripcion="Lunes a viernes, de 08:00 a 19:00. Elegís tus horarios del mes y venís siempre a la misma clase."

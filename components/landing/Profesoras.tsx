@@ -4,13 +4,14 @@ import { SectionTitle } from "./SectionTitle";
 
 export function Profesoras() {
   return (
-    <section id="nosotras" className="mx-auto max-w-7xl px-5 py-24 md:px-8">
+    <section id="nosotras" className="bg-paper">
+      <div className="mx-auto max-w-7xl px-5 py-24 md:px-8">
       <SectionTitle
         centrado
         eyebrow="Nosotras"
         titulo={
           <>
-            Quienes te <span className="italic text-sage-dark">acompañan</span>
+            Quienes te <span className="italic text-sage-deep">acompañan</span>
           </>
         }
         descripcion="Un equipo de profesoras certificadas que conoce a cada alumna por su nombre."
@@ -22,12 +23,13 @@ export function Profesoras() {
               etiqueta="[FOTO]"
               tono={i === 1 ? "salvia" : i === 2 ? "topo" : "arena"}
               icono="persona"
-              className="aspect-square w-48 rounded-full border-[6px] border-paper ring-1 ring-line"
+              className="aspect-square w-48 rounded-full border-[6px] border-cream ring-1 ring-line"
             />
             <h3 className="mt-6 text-2xl text-taupe-dark">{p.nombre}</h3>
             <p className="mt-1 text-sm tracking-wide text-ink-soft">{p.especialidad}</p>
           </div>
         ))}
+      </div>
       </div>
     </section>
   );
