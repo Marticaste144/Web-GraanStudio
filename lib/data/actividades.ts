@@ -28,7 +28,7 @@ export interface Actividad {
   descripcion: string;
   familia: Familia;
   icono: IconoActividad;
-  /** true = sin horario fijo, se coordina por consulta */
+  /** true = se coordina por consulta (sin grilla de horarios) */
   aConsulta: boolean;
 }
 

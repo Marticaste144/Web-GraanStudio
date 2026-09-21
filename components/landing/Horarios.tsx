@@ -29,7 +29,7 @@ export function Horarios() {
   const indice = DIAS.findIndex((d) => d.id === dia);
 
   return (
-    <section id="horarios" className="mx-auto max-w-6xl px-5 py-24 md:px-8">
+    <section id="horarios" className="mx-auto max-w-7xl px-5 py-24 md:px-8">
       <SectionTitle
         eyebrow="Horarios"
         titulo={
@@ -37,7 +37,7 @@ export function Horarios() {
             Tu semana en <span className="italic text-sage-dark">Graan</span>
           </>
         }
-        descripcion="Lunes a viernes, de 08:00 a 19:00. Elegís tus horarios fijos del mes y venís siempre a la misma clase."
+        descripcion="Lunes a viernes, de 08:00 a 19:00. Elegís tus horarios del mes y venís siempre a la misma clase."
       />
 
       {/* Desktop: grilla completa */}
@@ -143,7 +143,7 @@ export function Horarios() {
         <p>
           <strong className="font-medium text-taupe-dark">Yoga Mamá</strong> y{" "}
           <strong className="font-medium text-taupe-dark">Esfero Mamá</strong> (para embarazadas):
-          sin horario fijo, se coordinan a consulta.
+          se coordinan a consulta.
         </p>
       </div>
     </section>

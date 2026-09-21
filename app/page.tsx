@@ -2,6 +2,7 @@ import { Beneficios } from "@/components/landing/Beneficios";
 import { Clases } from "@/components/landing/Clases";
 import { CtaFinal } from "@/components/landing/CtaFinal";
 import { Footer } from "@/components/landing/Footer";
+import { Frase } from "@/components/landing/Frase";
 import { Galeria } from "@/components/landing/Galeria";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
@@ -15,6 +16,7 @@ export default function LandingPage() {
       <Header />
       <main>
         <Hero />
+        <Frase />
         <Beneficios />
         <Profesoras />
         <Clases />

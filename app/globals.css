@@ -18,8 +18,8 @@
 }
 
 @theme inline {
-  --font-serif: var(--font-cormorant), "Cormorant Garamond", Georgia, serif;
-  --font-sans: var(--font-jost), "Jost", system-ui, sans-serif;
+  --font-serif: var(--font-serif-display), "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-sans-body), "Montserrat", system-ui, sans-serif;
 }
 
 @layer base {
@@ -27,6 +27,7 @@
     scroll-behavior: smooth;
     scroll-padding-top: 5rem;
     -webkit-tap-highlight-color: transparent;
+    overflow-x: clip;
   }
   body {
     background: var(--color-cream);
@@ -40,9 +41,9 @@
   h3,
   h4 {
     font-family: var(--font-serif);
-    font-weight: 500;
-    letter-spacing: -0.01em;
-    line-height: 1.05;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.12;
   }
   button {
     cursor: pointer;
@@ -65,9 +66,9 @@
   /* Rótulo chico en mayúsculas con tracking, usado sobre los títulos de sección */
   .eyebrow {
     font-family: var(--font-sans);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 500;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--color-taupe);
   }
@@ -79,9 +80,9 @@
     gap: 0.5rem;
     border-radius: 9999px;
     padding: 0.8rem 1.6rem;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 500;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
     transition:
       background-color 0.2s,
       color 0.2s,
@@ -108,7 +109,7 @@
   }
   .btn-sm {
     padding: 0.5rem 1.1rem;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
   }
 
   /* Textura sutil de rayas finas para los placeholders de foto */

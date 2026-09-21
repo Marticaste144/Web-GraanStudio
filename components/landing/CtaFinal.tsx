@@ -9,10 +9,10 @@ export function CtaFinal() {
           Sumate a <span className="italic text-sage">Graan Studio</span>
         </h2>
         <p className="mx-auto mt-6 max-w-md leading-relaxed text-cream/75">
-          Creá tu cuenta, elegí tus horarios fijos y empezá a moverte esta semana.
+          Creá tu cuenta, elegí tus clases y empezá a moverte esta semana.
         </p>
         <Link
-          href="/alumno"
+          href="/registro"
           className="btn mt-10 bg-cream px-8 text-taupe-dark hover:bg-cream-alt"
         >
           Crear cuenta gratis

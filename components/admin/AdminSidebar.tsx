@@ -19,9 +19,9 @@ export function AdminSidebar() {
   const item = (it: (typeof ITEMS)[number], compacto: boolean) => {
     const Icon = it.icon;
     const activo = Boolean(it.href);
-    const clases = `flex items-center gap-3 rounded-xl text-sm transition-colors ${
-      compacto ? "shrink-0 px-4 py-2.5" : "px-4 py-3"
-    } ${activo ? "bg-taupe-dark text-cream" : "text-ink-soft hover:bg-cream-alt"}`;
+    const clases = `flex items-center gap-3 rounded-full text-sm transition-colors ${
+      compacto ? "shrink-0 px-4 py-2.5" : "px-5 py-3"
+    } ${activo ? "bg-taupe-dark text-cream" : "text-ink-soft hover:bg-cream-alt hover:text-taupe-dark"}`;
     const contenido = (
       <>
         <Icon size={18} strokeWidth={1.5} />
@@ -35,7 +35,7 @@ export function AdminSidebar() {
     ) : (
       <button
         key={it.label}
-        className={`${clases} w-full text-left`}
+        className={`${clases} ${compacto ? "" : "w-full text-left"}`}
         onClick={() => toast("Esta sección se incluye en la versión completa.")}
       >
         {contenido}
@@ -45,22 +45,27 @@ export function AdminSidebar() {
 
   return (
     <>
-      {/* Desktop: barra lateral */}
+      {/* Escritorio: barra lateral */}
       <aside className="fixed inset-y-0 left-0 hidden w-72 flex-col border-r border-line bg-paper px-5 py-7 lg:flex">
-        <Logo size={40} />
-        <p className="eyebrow mb-3 mt-10 px-4">Administración</p>
+        <Logo size={56} priority />
+        <p className="eyebrow mb-3 mt-10 px-5">Administración</p>
         <nav aria-label="Administración" className="flex flex-col gap-1">
           {ITEMS.map((it) => item(it, false))}
         </nav>
-        <Link href="/" className="mt-auto px-4 text-xs text-ink-soft hover:text-taupe-dark">
+        <Link href="/" className="mt-auto px-5 text-xs text-ink-soft hover:text-taupe-dark">
           ← Volver al sitio
         </Link>
       </aside>
 
-      {/* Mobile / tablet: barra superior */}
-      <div className="border-b border-line bg-paper px-5 py-4 lg:hidden">
-        <Logo size={36} />
-        <nav aria-label="Administración" className="no-scrollbar -mx-5 mt-4 flex gap-1 overflow-x-auto px-5">
+      {/* Celular / tablet: barra superior */}
+      <div className="border-b border-line bg-paper px-4 py-3 sm:px-8 lg:hidden">
+        <div className="flex items-center justify-between gap-4">
+          <Logo size={48} priority />
+          <Link href="/" className="text-xs text-ink-soft hover:text-taupe-dark">
+            ← Sitio
+          </Link>
+        </div>
+        <nav aria-label="Administración" className="no-scrollbar -mx-4 mt-3 flex gap-1 overflow-x-auto px-4 sm:-mx-8 sm:px-8">
           {ITEMS.map((it) => item(it, true))}
         </nav>
       </div>

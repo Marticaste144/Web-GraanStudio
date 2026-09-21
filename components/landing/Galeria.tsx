@@ -12,7 +12,7 @@ const LAYOUT = [
 
 export function Galeria() {
   return (
-    <section className="mx-auto max-w-6xl px-5 py-24 md:px-8">
+    <section className="mx-auto max-w-7xl px-5 py-24 md:px-8">
       <SectionTitle
         eyebrow="Galería"
         titulo={

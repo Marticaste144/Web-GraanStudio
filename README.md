@@ -13,8 +13,12 @@ y las acciones (anotarse, cargar comprobante, etc.) solo simulan el éxito en me
 ## Rutas
 
 - `/` landing pública
-- `/alumno` · `/alumno/mis-clases` · `/alumno/ver-clases` · `/alumno/cuota` · `/alumno/perfil`
+- `/login` · `/registro` (simulados: entran al portal sin validar nada)
+- `/alumno` · `/alumno/mis-clases` · `/alumno/ver-clases` (Reservar) · `/alumno/cuota` · `/alumno/perfil`
 - `/admin`
+
+Flujo: Landing → Iniciar sesión / Crear cuenta → Portal de alumna → Ver clases → Reservar.
+"Iniciar sesión" entra como Sofía (con 3 clases). "Crear cuenta" arranca un portal vacío con el nombre que se escriba.
 
 Truco: `/alumno?dia=miercoles` y `/admin?dia=jueves` fuerzan el día que se toma como "hoy".
 
@@ -26,5 +30,6 @@ Truco: `/alumno?dia=miercoles` y `/admin?dia=jueves` fuerzan el día que se toma
 - `lib/data/alumna.ts` — Sofía, sus clases, cuota y datos de transferencia
 - `lib/data/cupos.ts` — cupos mock (cuáles clases están completas)
 - `lib/data/admin.ts` — métricas y pagos del panel
-- `components/ui/Logo.tsx` — logo provisorio; ahí se cambia por el archivo real
+- `public/logograan.png` — logo original (no se modifica). `components/ui/Logo.tsx` lo muestra
+- `app/layout.tsx` — tipografías (Playfair Display + Montserrat)
 - `components/ui/FotoPlaceholder.tsx` — acepta `src` para reemplazar cada foto placeholder

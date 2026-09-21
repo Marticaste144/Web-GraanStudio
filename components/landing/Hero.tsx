@@ -3,19 +3,19 @@ import { FotoPlaceholder } from "@/components/ui/FotoPlaceholder";
 
 export function Hero() {
   return (
-    <section id="inicio" className="mx-auto max-w-6xl px-5 pb-20 pt-12 md:px-8 md:pb-28 md:pt-20">
+    <section id="inicio" className="mx-auto max-w-7xl px-5 pb-20 pt-12 md:px-8 md:pb-28 md:pt-20">
       <div className="grid items-center gap-14 md:grid-cols-[1.05fr_0.95fr]">
         <div>
           <p className="eyebrow">Guillermo E. Hudson · Buenos Aires</p>
-          <h1 className="mt-5 text-[3.2rem] leading-[0.98] text-taupe-dark sm:text-6xl lg:text-[5.4rem]">
+          <h1 className="mt-5 text-[2.7rem] leading-[1.05] text-taupe-dark sm:text-6xl lg:text-[4.4rem] xl:text-[5rem]">
             Pilates &amp; Yoga <span className="block italic text-sage-dark">en un solo lugar</span>
           </h1>
           <p className="mt-7 max-w-md text-base leading-relaxed text-ink-soft md:text-lg">
             Un estudio boutique para moverte con calma y con técnica. Grupos reducidos, profesoras
-            certificadas y un horario fijo que se vuelve tu momento de la semana.
+            certificadas y un horario propio que se vuelve tu momento de la semana.
           </p>
           <div className="mt-9 flex flex-wrap gap-3">
-            <Link href="/alumno/ver-clases" className="btn btn-primary">
+            <Link href="/login?next=/alumno/ver-clases" className="btn btn-primary">
               Reservar clase
             </Link>
             <a href="#horarios" className="btn btn-outline">

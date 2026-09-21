@@ -1,25 +1,20 @@
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
-
 interface Props {
-  titulo: string;
+  eyebrow?: string;
+  titulo: React.ReactNode;
   subtitulo?: string;
-  volverA?: string;
-  volverLabel?: string;
+  /** Acción a la derecha del título (en pantallas anchas). */
+  accion?: React.ReactNode;
 }
 
-export function PageHeader({ titulo, subtitulo, volverA = "/alumno", volverLabel = "Inicio" }: Props) {
+export function PageHeader({ eyebrow, titulo, subtitulo, accion }: Props) {
   return (
-    <header className="px-5 pb-2 pt-6">
-      <Link
-        href={volverA}
-        className="-ml-1 inline-flex items-center gap-1 text-sm text-ink-soft transition-colors hover:text-taupe-dark"
-      >
-        <ChevronLeft size={16} />
-        {volverLabel}
-      </Link>
-      <h1 className="mt-4 text-[2.6rem] text-taupe-dark">{titulo}</h1>
-      {subtitulo && <p className="mt-2 text-sm leading-relaxed text-ink-soft">{subtitulo}</p>}
+    <header className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4 pb-2 pt-8 md:pt-12">
+      <div className="max-w-2xl">
+        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+        <h1 className="mt-3 text-[2.4rem] leading-[1.05] text-taupe-dark md:text-5xl lg:text-[3.4rem]">{titulo}</h1>
+        {subtitulo && <p className="mt-3 text-sm leading-relaxed text-ink-soft md:text-base">{subtitulo}</p>}
+      </div>
+      {accion}
     </header>
   );
 }

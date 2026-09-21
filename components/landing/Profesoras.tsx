@@ -4,7 +4,7 @@ import { SectionTitle } from "./SectionTitle";
 
 export function Profesoras() {
   return (
-    <section id="nosotras" className="mx-auto max-w-6xl px-5 py-24 md:px-8">
+    <section id="nosotras" className="mx-auto max-w-7xl px-5 py-24 md:px-8">
       <SectionTitle
         centrado
         eyebrow="Nosotras"

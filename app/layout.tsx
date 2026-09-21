@@ -1,19 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Jost } from "next/font/google";
+import { Montserrat, Playfair_Display } from "next/font/google";
+import { AlumnoProvider } from "@/components/alumno/AlumnoProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import "./globals.css";
 
-const serif = Cormorant_Garamond({
+// Tipografías de la marca. Serif editorial de alto contraste para títulos y frases destacadas,
+// sans limpia para textos, navegación, botones y formularios. Para cambiarlas, tocar solo este bloque.
+const serif = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   style: ["normal", "italic"],
-  variable: "--font-cormorant",
+  variable: "--font-serif-display",
   display: "swap",
 });
 
-const sans = Jost({
+const sans = Montserrat({
   subsets: ["latin"],
-  variable: "--font-jost",
+  variable: "--font-sans-body",
   display: "swap",
 });
 
@@ -32,7 +35,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="es-AR" className={`${serif.variable} ${sans.variable}`}>
       <body className="min-h-dvh antialiased">
-        <ToastProvider>{children}</ToastProvider>
+        <ToastProvider>
+          <AlumnoProvider>{children}</AlumnoProvider>
+        </ToastProvider>
       </body>
     </html>
   );

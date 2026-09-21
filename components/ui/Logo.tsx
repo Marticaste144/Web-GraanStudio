@@ -1,76 +1,75 @@
+import Image from "next/image";
 import Link from "next/link";
 
 /**
- * LOGO PROVISORIO — aproximación tipográfica.
- *
- * Para usar el logo real: copiá el archivo a /public (ej. public/logo.svg) y reemplazá el
- * contenido de <LogoMark /> por:
- *   <Image src="/logo.svg" alt="Graan Studio" width={size} height={size} />
- * Todo el sitio usa este componente, así que alcanza con cambiarlo acá.
+ * Logo original de Graan Studio: /public/logograan.png (no se modifica ni se recrea).
+ * El PNG tiene fondo blanco opaco, así que se muestra con `mix-blend-multiply`: sobre los
+ * fondos claros de la web el blanco desaparece y queda solo el monograma.
+ * El nombre "GRAAN STUDIO / PILATES & YOGA" es texto vivo al lado del monograma.
  */
 
-export function LogoMark({ size = 44 }: { size?: number }) {
+// Tailwind necesita las clases completas para detectarlas.
+const NOMBRE_DESDE = {
+  siempre: "flex",
+  sm: "hidden sm:flex",
+  md: "hidden md:flex",
+  lg: "hidden lg:flex",
+} as const;
+
+interface LogoMarkProps {
+  size?: number;
+  className?: string;
+  priority?: boolean;
+}
+
+/** Solo el monograma G+S. `size` es el alto en px. */
+export function LogoMark({ size = 56, className = "", priority = false }: LogoMarkProps) {
   return (
-    <svg
-      viewBox="0 0 100 100"
-      width={size}
-      height={size}
-      role="img"
-      aria-label="Graan Studio"
-      className="shrink-0"
-    >
-      <circle cx="50" cy="50" r="48.5" fill="none" stroke="#7A6A58" strokeWidth="1.2" />
-      <text
-        x="38"
-        y="68"
-        textAnchor="middle"
-        fontSize="76"
-        fontWeight="500"
-        fill="#7A6A58"
-        style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}
-      >
-        G
-      </text>
-      <text
-        x="63"
-        y="76"
-        textAnchor="middle"
-        fontSize="76"
-        fontWeight="500"
-        fontStyle="italic"
-        fill="#6E8A7E"
-        fillOpacity="0.9"
-        style={{ fontFamily: "var(--font-cormorant), Georgia, serif" }}
-      >
-        S
-      </text>
-    </svg>
+    <Image
+      src="/logograan.png"
+      alt="Graan Studio"
+      width={586}
+      height={570}
+      priority={priority}
+      style={{ height: size, width: "auto" }}
+      className={`shrink-0 mix-blend-multiply ${className}`}
+    />
   );
 }
 
 interface LogoProps {
-  /** "completo" = marca + nombre. "marca" = solo el círculo. */
+  /** "completo" = monograma + nombre. "marca" = solo el monograma. */
   variante?: "completo" | "marca";
   size?: number;
+  /** Desde qué ancho de pantalla se muestra el nombre al lado del monograma. */
+  nombreDesde?: keyof typeof NOMBRE_DESDE;
   href?: string;
   className?: string;
+  priority?: boolean;
 }
 
-export function Logo({ variante = "completo", size = 44, href = "/", className = "" }: LogoProps) {
+export function Logo({
+  variante = "completo",
+  size = 56,
+  nombreDesde = "siempre",
+  href = "/",
+  className = "",
+  priority = false,
+}: LogoProps) {
   return (
-    <Link href={href} className={`inline-flex items-center gap-3 ${className}`} aria-label="Graan Studio">
-      <LogoMark size={size} />
+    <Link href={href} className={`inline-flex items-center gap-1 ${className}`} aria-label="Graan Studio, ir al inicio">
+      <LogoMark size={size} priority={priority} />
       {variante === "completo" && (
-        <span className="flex flex-col whitespace-nowrap leading-none">
+        <span className={`${NOMBRE_DESDE[nombreDesde]} flex-col whitespace-nowrap leading-none`} aria-hidden>
           <span
-            className="font-serif font-medium uppercase tracking-[0.18em] text-taupe-dark"
-            style={{ fontSize: size * 0.5 }}
+            className="font-serif uppercase tracking-[0.2em] text-taupe-dark"
+            style={{ fontSize: Math.max(15, size * 0.32) }}
           >
             Graan Studio
           </span>
           <span
-            className="mt-1.5 font-medium uppercase tracking-[0.3em] text-taupe"
-            style={{ fontSize: Math.max(9, size * 0.15) }}
+            className="mt-1.5 font-medium uppercase tracking-[0.32em] text-taupe"
+            style={{ fontSize: Math.max(8, size * 0.15) }}
           >
             Pilates &amp; Yoga
           </span>

@@ -5,7 +5,7 @@ import { SectionTitle } from "./SectionTitle";
 export function Clases() {
   return (
     <section id="clases" className="bg-cream-alt">
-      <div className="mx-auto max-w-6xl px-5 py-24 md:px-8">
+      <div className="mx-auto max-w-7xl px-5 py-24 md:px-8">
         <SectionTitle
           eyebrow="Nuestras clases"
           titulo={
@@ -13,7 +13,7 @@ export function Clases() {
               Ocho formas de <span className="italic text-sage-dark">moverte</span>
             </>
           }
-          descripcion="Te anotás a tus horarios fijos y venís a la misma clase todas las semanas, con tu grupo y tu profesora."
+          descripcion="Elegís tus días y horarios, y venís a la misma clase cada semana, con tu grupo y tu profesora."
         />
         <ol className="mt-14 grid gap-x-12 sm:grid-cols-2">
           {ACTIVIDADES.map((a, i) => (
@@ -29,7 +29,7 @@ export function Clases() {
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{a.descripcion}</p>
                 {a.aConsulta && (
                   <p className="mt-3 text-xs font-medium uppercase tracking-[0.15em] text-sage-dark">
-                    Sin horario fijo · se coordina a consulta
+                    Se coordina a consulta
                   </p>
                 )}
               </div>

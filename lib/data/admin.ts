@@ -5,7 +5,7 @@ import { PLANES } from "./alumna";
 import { CAPACIDAD, ocupadasDe, TOTAL_INSCRIPCIONES } from "./cupos";
 import { clasesDeActividad } from "./horarios";
 
-// Cada alumna toma ~3 horarios fijos en promedio; de ahí sale la cantidad de alumnas activas.
+// Cada alumna toma ~3 clases semanales en promedio; de ahí sale la cantidad de alumnas activas.
 export const HORARIOS_POR_ALUMNA = 3;
 export const ALUMNAS_ACTIVAS = Math.round(TOTAL_INSCRIPCIONES / HORARIOS_POR_ALUMNA);
 export const INGRESOS_DEL_MES = 5_420_000;

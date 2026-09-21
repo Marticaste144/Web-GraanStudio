@@ -17,8 +17,8 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line/70 bg-cream/95 backdrop-blur">
-      <div className="mx-auto flex h-[4.5rem] max-w-6xl items-center justify-between px-5 md:px-8">
-        <Logo size={40} />
+      <div className="mx-auto flex h-[4.75rem] max-w-7xl items-center justify-between px-5 md:px-8">
+        <Logo size={56} priority />
 
         <nav className="hidden items-center gap-9 md:flex" aria-label="Principal">
           {NAV.map((n) => (
@@ -32,9 +32,12 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
-          <Link href="/alumno/ver-clases" className="btn btn-primary btn-sm hidden sm:inline-flex">
-            Reservar clase
+        <div className="flex items-center gap-2 md:gap-5">
+          <Link href="/login" className="hidden text-sm tracking-wide text-taupe-dark hover:underline hover:underline-offset-4 md:inline">
+            Iniciar sesión
+          </Link>
+          <Link href="/registro" className="btn btn-primary btn-sm hidden sm:inline-flex">
+            Crear cuenta
           </Link>
           <button
             type="button"
@@ -55,14 +58,19 @@ export function Header() {
               key={n.href}
               href={n.href}
               onClick={() => setAbierto(false)}
-              className="block border-b border-line/60 py-3.5 font-serif text-2xl text-taupe-dark"
+              className="block border-b border-line/60 py-3.5 font-serif text-xl text-taupe-dark"
             >
               {n.label}
             </a>
           ))}
-          <Link href="/alumno/ver-clases" className="btn btn-primary mt-5 w-full">
-            Reservar clase
-          </Link>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            <Link href="/login" className="btn btn-outline">
+              Iniciar sesión
+            </Link>
+            <Link href="/registro" className="btn btn-primary">
+              Crear cuenta
+            </Link>
+          </div>
         </nav>
       )}
     </header>

@@ -11,7 +11,7 @@ const ICONOS: Record<(typeof BENEFICIOS)[number]["icono"], React.ComponentType<L
 export function Beneficios() {
   return (
     <section className="border-y border-line bg-paper">
-      <div className="mx-auto grid max-w-6xl gap-x-10 gap-y-12 px-5 py-16 sm:grid-cols-2 md:px-8 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl gap-x-10 gap-y-12 px-5 py-16 sm:grid-cols-2 md:px-8 lg:grid-cols-4">
         {BENEFICIOS.map((b) => {
           const Icon = ICONOS[b.icono];
           return (
