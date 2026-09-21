@@ -15,7 +15,7 @@ y las acciones (anotarse, cargar comprobante, etc.) solo simulan el éxito en me
 - `/` landing pública
 - `/login` · `/registro` (simulados: entran al portal sin validar nada)
 - `/alumno` · `/alumno/mis-clases` · `/alumno/ver-clases` (Reservar) · `/alumno/cuota` · `/alumno/perfil`
-- `/admin` · `/admin/alumnos` · `/admin/alumnos/[id]` (ficha de alumna) · `/admin/clases` · `/admin/pagos` · `/admin/metricas` (sin login, solo para mostrar)
+- `/admin` · `/admin/alumnos` · `/admin/alumnos/[id]` (ficha de alumna) · `/admin/clases` · `/admin/pagos` · `/admin/metricas` (sin login, solo para mostrar). En Admin > Clases se pueden crear, ver, editar y eliminar clases; los cambios se hacen en memoria y no se guardan
 
 Flujo: Landing → Iniciar sesión / Crear cuenta → Portal de alumna → Ver clases → Reservar.
 "Iniciar sesión" entra como Sofía (con 3 clases). "Crear cuenta" arranca un portal vacío con el nombre que se escriba.
@@ -29,6 +29,7 @@ Truco: `/alumno?dia=miercoles` y `/admin?dia=jueves` fuerzan el día que se toma
 - `lib/data/estudio.ts` — dirección, contacto, beneficios, profesoras, galería
 - `lib/data/alumna.ts` — Sofía, sus clases, cuota y datos de transferencia
 - `lib/data/cupos.ts` — cupos mock (cuáles clases están completas)
+- `lib/data/clasesAdmin.ts` — clases del Admin (actividad, día, hora, profesor/a, cupo y alumnas anotadas)
 - `lib/data/ficha.ts` — clases, asistencia e historial de la ficha de alumna (datos de ejemplo, sin reglas nuevas)
 - `lib/data/admin.ts` — alumnas, pagos y métricas del panel (todo se calcula desde una única lista de alumnas)
 - `public/logograan.png` — logo original (no se modifica). `components/ui/Logo.tsx` lo muestra

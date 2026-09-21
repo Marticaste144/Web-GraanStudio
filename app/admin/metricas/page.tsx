@@ -1,14 +1,11 @@
 import { AdminHeader, Barra, Metrica, Tarjeta } from "@/components/admin/AdminUI";
+import { MetricaOcupacion, OcupacionPorActividad, OcupacionPorDia, OcupacionPorFranja } from "@/components/admin/ClasesWidgets";
 import {
   ALUMNAS_ACTIVAS,
   DISTRIBUCION_MEDIOS,
   DISTRIBUCION_PLANES,
   INGRESOS_DEL_MES,
   INGRESOS_MESES_ANTERIORES,
-  OCUPACION_POR_ACTIVIDAD,
-  OCUPACION_POR_DIA,
-  OCUPACION_POR_FRANJA,
-  OCUPACION_PROMEDIO,
   PENDIENTE_DE_COBRO,
 } from "@/lib/data/admin";
 import { formatoPeso } from "@/lib/data/alumna";
@@ -28,7 +25,7 @@ export default function AdminMetricas() {
         <Metrica etiqueta="Ingresos del mes" valor={formatoPeso(INGRESOS_DEL_MES)} nota="cuotas aprobadas" tono="oscura" />
         <Metrica etiqueta="Pendiente de cobro" valor={formatoPeso(PENDIENTE_DE_COBRO)} nota="comprobantes por revisar" tono="sage" />
         <Metrica etiqueta="Alumnas activas" valor={String(ALUMNAS_ACTIVAS)} nota="con al menos una clase semanal" />
-        <Metrica etiqueta="Ocupación promedio" valor={`${OCUPACION_PROMEDIO}%`} nota="de todos los horarios" />
+        <MetricaOcupacion nota="de todos los horarios" />
       </div>
 
       <div className="mt-5 grid items-start gap-5 lg:mt-6 lg:gap-6 xl:grid-cols-2">
@@ -43,35 +40,11 @@ export default function AdminMetricas() {
           </ul>
         </Tarjeta>
 
-        <Tarjeta titulo="Ocupación por actividad" tono="sage">
-          <ul className="space-y-4">
-            {OCUPACION_POR_ACTIVIDAD.map((a) => (
-              <li key={a.id}>
-                <Barra etiqueta={a.nombre} valor={`${a.porcentaje}%`} porcentaje={a.porcentaje} />
-              </li>
-            ))}
-          </ul>
-        </Tarjeta>
+        <OcupacionPorActividad />
 
-        <Tarjeta titulo="Ocupación por día">
-          <ul className="space-y-4">
-            {OCUPACION_POR_DIA.map((d) => (
-              <li key={d.dia}>
-                <Barra etiqueta={d.nombre} valor={`${d.porcentaje}%`} porcentaje={d.porcentaje} />
-              </li>
-            ))}
-          </ul>
-        </Tarjeta>
+        <OcupacionPorDia />
 
-        <Tarjeta titulo="Ocupación por franja horaria" tono="cream">
-          <ul className="space-y-4">
-            {OCUPACION_POR_FRANJA.map((f) => (
-              <li key={f.nombre}>
-                <Barra etiqueta={f.nombre} valor={`${f.porcentaje}%`} porcentaje={f.porcentaje} color="taupe" />
-              </li>
-            ))}
-          </ul>
-        </Tarjeta>
+        <OcupacionPorFranja />
 
         <Tarjeta titulo="Planes contratados" subtitulo="Alumnas según clases por semana">
           <ul className="space-y-4">

@@ -1,11 +1,10 @@
 // Datos MOCK del panel de administración.
 // Todo sale de una única lista de alumnas (ALUMNAS): los pagos, los ingresos y los totales
 // se calculan a partir de ella, así las pantallas del admin siempre son coherentes entre sí.
+// Las clases y qué alumnas están anotadas en cada una viven en lib/data/clasesAdmin.ts.
 
-import { ACTIVIDADES, type ActividadId } from "./actividades";
-import { ALUMNA_DEMO, CLASES_DE_ALUMNA, PLANES } from "./alumna";
-import { CAPACIDAD, ocupadasDe, TOTAL_INSCRIPCIONES } from "./cupos";
-import { clasesDeActividad, clasesDelDia, DIAS, TODAS_LAS_CLASES, type Clase, type Dia } from "./horarios";
+import { ALUMNA_DEMO, PLANES } from "./alumna";
+import { TOTAL_INSCRIPCIONES } from "./cupos";
 
 export type MedioDePago = "Transferencia" | "Efectivo" | "Mercado Pago";
 export type EstadoPago = "Aprobado" | "Pendiente";
@@ -27,10 +26,6 @@ export interface Alumna {
   hace: number;
   desde: string;
 }
-
-// Cada alumna toma ~3 clases semanales en promedio; de ahí sale la cantidad de alumnas activas.
-export const HORARIOS_POR_ALUMNA = 3;
-export const ALUMNAS_ACTIVAS = Math.round(TOTAL_INSCRIPCIONES / HORARIOS_POR_ALUMNA);
 
 /** Id de Sofía Benítez, la alumna con la que se entra al portal (tercera de la lista). */
 export const SOFIA_ID = 3;
@@ -68,6 +63,23 @@ const MESES_DESDE = [
 
 const sinTildes = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
+/**
+ * Cuántas clases por semana tiene cada alumna. Se generan alumnas hasta que la suma de sus clases
+ * iguala a las inscripciones totales del estudio: así "cuántas alumnas hay en cada clase" y
+ * "cuántas clases tiene cada alumna" coinciden exactamente.
+ */
+function clasesPorAlumna(): ClasesPorSemana[] {
+  const lista: ClasesPorSemana[] = [];
+  let acumulado = 0;
+  for (let i = 0; acumulado < TOTAL_INSCRIPCIONES; i++) {
+    const previsto = i < DESTACADAS.length ? DESTACADAS[i][2] : PLAN_POR_INDICE[(i - DESTACADAS.length) % PLAN_POR_INDICE.length];
+    const k = Math.min(previsto, TOTAL_INSCRIPCIONES - acumulado) as ClasesPorSemana;
+    lista.push(k);
+    acumulado += k;
+  }
+  return lista;
+}
+
 function armarAlumna(
   id: number,
   nombre: string,
@@ -93,10 +105,10 @@ function armarAlumna(
   };
 }
 
-export const ALUMNAS: Alumna[] = Array.from({ length: ALUMNAS_ACTIVAS }, (_, i) => {
+export const ALUMNAS: Alumna[] = clasesPorAlumna().map((k, i) => {
   if (i < DESTACADAS.length) {
-    const [n, a, c, m, e] = DESTACADAS[i];
-    const alumna = armarAlumna(i + 1, n, a, c, m, e, i % 4);
+    const [n, a, , m, e] = DESTACADAS[i];
+    const alumna = armarAlumna(i + 1, n, a, k, m, e, i % 4);
     // Sofía es la alumna del portal: sus datos tienen que coincidir con los de la vista de alumna.
     return alumna.id === SOFIA_ID
       ? { ...alumna, email: ALUMNA_DEMO.email, telefono: ALUMNA_DEMO.telefono, desde: ALUMNA_DEMO.desde }
@@ -107,12 +119,16 @@ export const ALUMNAS: Alumna[] = Array.from({ length: ALUMNAS_ACTIVAS }, (_, i) 
     i + 1,
     NOMBRES[g % NOMBRES.length],
     APELLIDOS[g % APELLIDOS.length],
-    PLAN_POR_INDICE[g % PLAN_POR_INDICE.length],
+    k,
     MEDIO_POR_INDICE[g % MEDIO_POR_INDICE.length],
     g % 9 === 4 ? "Pendiente" : "Aprobado",
     4 + ((g * 3) % 22),
   );
 });
+
+export const ALUMNAS_ACTIVAS = ALUMNAS.length;
+
+export const getAlumna = (id: number): Alumna | undefined => ALUMNAS.find((a) => a.id === id);
 
 // ---- Pagos (uno por alumna en el mes), del más reciente al más antiguo ----
 export type Pago = Alumna;
@@ -124,35 +140,7 @@ const sumar = (l: Alumna[]) => l.reduce((acc, p) => acc + p.monto, 0);
 export const INGRESOS_DEL_MES = sumar(ALUMNAS.filter((a) => a.estado === "Aprobado"));
 export const PENDIENTE_DE_COBRO = sumar(PAGOS_PENDIENTES);
 
-// ---- Ocupación ----
-const promedio = (clases: Clase[]) =>
-  clases.length === 0
-    ? 0
-    : Math.round((clases.reduce((acc, c) => acc + ocupadasDe(c), 0) / (clases.length * CAPACIDAD)) * 100);
-
-/** Ocupación (0–100) de una actividad: promedio de todos sus horarios semanales. */
-export const ocupacionDeActividad = (id: ActividadId) => promedio(clasesDeActividad(id));
-
-export const OCUPACION_POR_ACTIVIDAD = ACTIVIDADES.filter((a) => !a.aConsulta)
-  .map((a) => ({ id: a.id, nombre: a.nombre, porcentaje: ocupacionDeActividad(a.id) }))
-  .sort((a, b) => b.porcentaje - a.porcentaje);
-
-export const OCUPACION_PROMEDIO = promedio(TODAS_LAS_CLASES);
-
-export const OCUPACION_POR_DIA: { dia: Dia; nombre: string; porcentaje: number }[] = DIAS.map((d) => ({
-  dia: d.id,
-  nombre: d.nombre,
-  porcentaje: promedio(TODAS_LAS_CLASES.filter((c) => c.dia === d.id)),
-}));
-
-const h = (c: Clase) => parseInt(c.hora);
-export const OCUPACION_POR_FRANJA = [
-  { nombre: "Mañana · 08 a 12 h", porcentaje: promedio(TODAS_LAS_CLASES.filter((c) => h(c) < 12)) },
-  { nombre: "Mediodía · 12 a 15 h", porcentaje: promedio(TODAS_LAS_CLASES.filter((c) => h(c) >= 12 && h(c) < 15)) },
-  { nombre: "Tarde · 16 a 19 h", porcentaje: promedio(TODAS_LAS_CLASES.filter((c) => h(c) >= 16)) },
-];
-
-// ---- Métricas ----
+// ---- Métricas de alumnas y pagos ----
 export const DISTRIBUCION_PLANES = ([1, 2, 3] as const).map((n) => ({
   nombre: PLANES[n].nombre,
   cantidad: ALUMNAS.filter((a) => a.clasesPorSemana === n).length,
@@ -163,6 +151,7 @@ export const DISTRIBUCION_MEDIOS = (["Transferencia", "Mercado Pago", "Efectivo"
   cantidad: ALUMNAS.filter((a) => a.medio === m).length,
 }));
 
-/** Ingresos de los 5 meses anteriores (mock) + el mes actual (calculado). */
-export const INGRESOS_MESES_ANTERIORES = [3_150_000, 3_480_000, 3_820_000, 4_090_000, 4_350_000];
-export const INGRESOS_SERIE = [...INGRESOS_MESES_ANTERIORES, INGRESOS_DEL_MES];
+/** Ingresos de los 5 meses anteriores (mock): una tendencia creciente que termina cerca del mes actual. */
+export const INGRESOS_MESES_ANTERIORES = [0.66, 0.72, 0.79, 0.86, 0.93].map(
+  (f) => Math.round((INGRESOS_DEL_MES * f) / 10000) * 10000,
+);

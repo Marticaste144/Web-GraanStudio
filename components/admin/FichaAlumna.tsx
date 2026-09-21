@@ -5,18 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, ChevronDown, Pencil } from "lucide-react";
 import { Campo } from "@/components/auth/Campo";
 import { useToast } from "@/components/ui/Toast";
+import { getActividad } from "@/lib/data/actividades";
 import type { Alumna, EstadoPago, MedioDePago } from "@/lib/data/admin";
+import { ordenSemanal } from "@/lib/data/clasesAdmin";
+import { nombreDia, type Dia } from "@/lib/data/horarios";
 import type { Asistencia } from "@/lib/data/ficha";
 import { formatoPeso } from "@/lib/data/alumna";
 import { useAdminAlumnas } from "./AdminAlumnasProvider";
 import { AdminHeader, EstadoBadge, Tarjeta } from "./AdminUI";
-
-export interface ClaseFicha {
-  dia: string;
-  hora: string;
-  actividad: string;
-  esProxima: boolean;
-}
+import { useClasesAdmin } from "./ClasesProvider";
 
 export interface PagoFicha {
   mes: string;
@@ -28,7 +25,9 @@ export interface PagoFicha {
 
 interface Props {
   alumna: Alumna;
-  clases: ClaseFicha[];
+  /** "Hoy" del demo, para marcar cuál es la próxima clase */
+  hoyDia: Dia;
+  hoyHora: number;
   historial: PagoFicha[];
   vence: string;
   asistencia: Asistencia;
@@ -58,10 +57,24 @@ const CuotaBadge = ({ estado }: { estado: EstadoPago }) =>
     <span className="inline-block whitespace-nowrap rounded-full bg-amber-soft px-3 py-1 text-xs font-medium text-amber-ink">Pendiente</span>
   );
 
-export function FichaAlumna({ alumna, clases, historial, vence, asistencia }: Props) {
+export function FichaAlumna({ alumna, hoyDia, hoyHora, historial, vence, asistencia }: Props) {
   const toast = useToast();
   const { datos, editar, alternarEstado } = useAdminAlumnas();
+  const { clases: todas } = useClasesAdmin();
   const a = datos(alumna);
+
+  // Las clases en las que está anotada salen de la lista de clases del Admin (la misma que se gestiona en Admin > Clases).
+  const propias = todas.filter((c) => c.alumnas.includes(alumna.id)).sort((x, y) => ordenSemanal(x) - ordenSemanal(y));
+  const ahora = ordenSemanal({ dia: hoyDia, hora: String(hoyHora) });
+  // La "próxima" es la primera desde ahora; si ya no quedan esta semana, la primera de la siguiente.
+  const proxima = propias.find((c) => ordenSemanal(c) >= ahora) ?? propias[0];
+  const clases = propias.map((c) => ({
+    id: c.id,
+    dia: nombreDia(c.dia),
+    hora: c.hora,
+    actividad: getActividad(c.actividad).nombre,
+    esProxima: c === proxima,
+  }));
 
   const [editando, setEditando] = useState(false);
   const [verHistorial, setVerHistorial] = useState(false);
@@ -194,7 +207,7 @@ export function FichaAlumna({ alumna, clases, historial, vence, asistencia }: Pr
           {clases.length > 0 ? (
             <ul className="divide-y divide-line border-y border-line">
               {clases.map((c) => (
-                <li key={`${c.dia}-${c.hora}`} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-3.5">
+                <li key={c.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-3.5">
                   <div className="flex min-w-0 items-center gap-4">
                     <span className="w-14 shrink-0 font-serif text-2xl leading-none text-taupe-dark">{c.hora}</span>
                     <div className="min-w-0">

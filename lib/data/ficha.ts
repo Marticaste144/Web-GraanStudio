@@ -3,31 +3,9 @@
 // Importante: por ahora la ficha usa SOLO lo que ya existe en el proyecto (plan, importes, estado de
 // la cuota, medios de pago, clases y horarios). No define reglas nuevas de pagos, recuperaciones ni
 // cancelaciones: eso se va a relevar con la dueña. Los datos de asistencia son de ejemplo.
+// Las clases de la alumna salen de la lista de clases del Admin (lib/data/clasesAdmin.ts).
 
-import { ALUMNAS, SOFIA_ID, type Alumna, type EstadoPago, type MedioDePago } from "./admin";
-import { CLASES_DE_ALUMNA } from "./alumna";
-import { clasesDelDia, DIAS, TODAS_LAS_CLASES, type Clase } from "./horarios";
-
-export const getAlumna = (id: number): Alumna | undefined => ALUMNAS.find((a) => a.id === id);
-
-// ---- Clases en las que está anotada ----
-/**
- * Sofía usa sus 3 clases reales (las mismas que ve en el portal). Para el resto se reparten
- * tantas clases como indique su plan, en días distintos de la semana, siempre sobre horarios que existen.
- */
-export function clasesDeAlumna(a: Alumna): Clase[] {
-  if (a.id === SOFIA_ID) {
-    return CLASES_DE_ALUMNA.flatMap((c) => TODAS_LAS_CLASES.filter((x) => x.dia === c.dia && x.hora === c.hora));
-  }
-  const inicio = a.id % 5;
-  const elegidas = Array.from({ length: a.clasesPorSemana }, (_, k) => {
-    const dia = DIAS[(inicio + 2 * k) % 5].id;
-    const delDia = clasesDelDia(dia);
-    return delDia[(a.id * 7 + k * 3) % delDia.length];
-  });
-  const orden = (c: Clase) => DIAS.findIndex((d) => d.id === c.dia) * 100 + parseInt(c.hora);
-  return elegidas.sort((x, y) => orden(x) - orden(y));
-}
+import type { Alumna, EstadoPago, MedioDePago } from "./admin";
 
 // ---- Asistencia (datos de ejemplo) ----
 export interface Asistencia {
