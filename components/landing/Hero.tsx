@@ -22,9 +22,6 @@ export function Hero() {
               Ver horarios
             </a>
           </div>
-          <p className="mt-8 text-sm text-ink-soft">
-            Lunes a viernes, de 08:00 a 19:00 · Hasta 8 alumnas por clase
-          </p>
         </div>
 
         {/* Collage editorial de fotos placeholder */}

@@ -3,9 +3,9 @@
 // se calculan a partir de ella, así las pantallas del admin siempre son coherentes entre sí.
 
 import { ACTIVIDADES, type ActividadId } from "./actividades";
-import { PLANES } from "./alumna";
+import { ALUMNA_DEMO, CLASES_DE_ALUMNA, PLANES } from "./alumna";
 import { CAPACIDAD, ocupadasDe, TOTAL_INSCRIPCIONES } from "./cupos";
-import { clasesDeActividad, DIAS, TODAS_LAS_CLASES, type Clase, type Dia } from "./horarios";
+import { clasesDeActividad, clasesDelDia, DIAS, TODAS_LAS_CLASES, type Clase, type Dia } from "./horarios";
 
 export type MedioDePago = "Transferencia" | "Efectivo" | "Mercado Pago";
 export type EstadoPago = "Aprobado" | "Pendiente";
@@ -16,6 +16,7 @@ export interface Alumna {
   nombre: string;
   apellido: string;
   email: string;
+  telefono: string;
   clasesPorSemana: ClasesPorSemana;
   plan: string;
   monto: number;
@@ -30,6 +31,9 @@ export interface Alumna {
 // Cada alumna toma ~3 clases semanales en promedio; de ahí sale la cantidad de alumnas activas.
 export const HORARIOS_POR_ALUMNA = 3;
 export const ALUMNAS_ACTIVAS = Math.round(TOTAL_INSCRIPCIONES / HORARIOS_POR_ALUMNA);
+
+/** Id de Sofía Benítez, la alumna con la que se entra al portal (tercera de la lista). */
+export const SOFIA_ID = 3;
 
 // Las primeras alumnas están escritas a mano (son las que se ven en "Pagos recientes").
 const DESTACADAS: [string, string, ClasesPorSemana, MedioDePago, EstadoPago][] = [
@@ -78,6 +82,7 @@ function armarAlumna(
     nombre,
     apellido,
     email: `${sinTildes(nombre)}.${sinTildes(apellido)}@ejemplo.com`,
+    telefono: `+54 9 11 ${5000 + ((id * 137) % 4000)}-${1000 + ((id * 731) % 9000)}`,
     clasesPorSemana: clases,
     plan: PLANES[clases].nombre,
     monto: PLANES[clases].monto,
@@ -91,7 +96,11 @@ function armarAlumna(
 export const ALUMNAS: Alumna[] = Array.from({ length: ALUMNAS_ACTIVAS }, (_, i) => {
   if (i < DESTACADAS.length) {
     const [n, a, c, m, e] = DESTACADAS[i];
-    return armarAlumna(i + 1, n, a, c, m, e, i % 4);
+    const alumna = armarAlumna(i + 1, n, a, c, m, e, i % 4);
+    // Sofía es la alumna del portal: sus datos tienen que coincidir con los de la vista de alumna.
+    return alumna.id === SOFIA_ID
+      ? { ...alumna, email: ALUMNA_DEMO.email, telefono: ALUMNA_DEMO.telefono, desde: ALUMNA_DEMO.desde }
+      : alumna;
   }
   const g = i - DESTACADAS.length;
   return armarAlumna(

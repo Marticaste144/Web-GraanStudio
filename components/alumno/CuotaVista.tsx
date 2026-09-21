@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRef } from "react";
 import { CalendarClock, Check, Copy, FileCheck2, Upload } from "lucide-react";
+import { Importe } from "@/components/ui/Importe";
 import { useToast } from "@/components/ui/Toast";
 import { DATOS_TRANSFERENCIA, formatoPeso } from "@/lib/data/alumna";
 import { useAlumno } from "./AlumnoProvider";
@@ -45,7 +46,7 @@ export function CuotaVista({ mes, vence }: { mes: string; vence: string }) {
                   <div>
                     <p className="eyebrow">Cuota de {mes}</p>
                     <p className="mt-4 font-serif text-5xl leading-none text-taupe-dark sm:text-6xl">
-                      {formatoPeso(plan.monto)}
+                      <Importe valor={formatoPeso(plan.monto)} />
                     </p>
                     <p className="mt-2 text-sm text-ink-soft">{plan.nombre}</p>
                   </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
+import { Check, Search } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import type { EstadoPago, Pago } from "@/lib/data/admin";
 import { formatoPeso } from "@/lib/data/alumna";
@@ -18,11 +18,14 @@ const PAGINA = 15;
 /** Los pagos vienen con su fecha ya formateada desde el servidor. */
 export type PagoConFecha = Pago & { fecha: string };
 
-export function PagosLista({ pagos }: { pagos: PagoConFecha[] }) {
+const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
+
+export function PagosLista({ pagos, busquedaInicial = "" }: { pagos: PagoConFecha[]; busquedaInicial?: string }) {
   const toast = useToast();
   // Solo en memoria: aprobar un pago cambia el estado visual, no guarda nada.
   const [aprobados, setAprobados] = useState<Set<number>>(new Set());
   const [filtro, setFiltro] = useState<Filtro>("todos");
+  const [busqueda, setBusqueda] = useState(busquedaInicial);
   const [visibles, setVisibles] = useState(PAGINA);
 
   const estadoDe = (p: PagoConFecha): EstadoPago => (aprobados.has(p.id) ? "Aprobado" : p.estado);
@@ -30,7 +33,11 @@ export function PagosLista({ pagos }: { pagos: PagoConFecha[] }) {
   const pendiente = pagos.filter((p) => estadoDe(p) === "Pendiente").reduce((a, p) => a + p.monto, 0);
   const cantPendientes = pagos.filter((p) => estadoDe(p) === "Pendiente").length;
 
-  const filtrados = pagos.filter((p) => filtro === "todos" || estadoDe(p) === filtro);
+  const q = norm(busqueda.trim());
+  const filtrados = pagos.filter(
+    (p) => (filtro === "todos" || estadoDe(p) === filtro) && (!q || norm(`${p.nombre} ${p.apellido}`).includes(q)),
+  );
+  const hayFiltro = filtro !== "todos" || q !== "";
   const mostrados = filtrados.slice(0, visibles);
 
   const aprobar = (p: PagoConFecha) => {
@@ -55,7 +62,22 @@ export function PagosLista({ pagos }: { pagos: PagoConFecha[] }) {
       </div>
 
       <div className="mt-5 lg:mt-6">
-        <Tarjeta titulo="Todos los pagos" subtitulo={`${filtrados.length} pagos`}>
+        <Tarjeta titulo="Todos los pagos" subtitulo={hayFiltro ? `${filtrados.length} ${filtrados.length === 1 ? "resultado" : "resultados"}` : undefined}>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <label className="relative block md:w-80">
+              <span className="sr-only">Buscar alumna</span>
+              <Search size={16} className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft" />
+              <input
+                type="search"
+                value={busqueda}
+                onChange={(e) => {
+                  setBusqueda(e.target.value);
+                  setVisibles(PAGINA);
+                }}
+                placeholder="Buscar por nombre"
+                className="w-full rounded-full border border-line bg-cream py-3 pl-11 pr-4 text-sm outline-none placeholder:text-ink-soft/60 focus:border-taupe focus:ring-2 focus:ring-taupe/15"
+              />
+            </label>
           <div className="no-scrollbar flex gap-2 overflow-x-auto">
             {FILTROS.map((f) => (
               <button
@@ -73,6 +95,11 @@ export function PagosLista({ pagos }: { pagos: PagoConFecha[] }) {
               </button>
             ))}
           </div>
+          </div>
+
+          {mostrados.length === 0 && (
+            <p className="py-12 text-center text-sm text-ink-soft">No encontramos pagos con esos datos.</p>
+          )}
 
           {/* Celular */}
           <ul className="mt-4 divide-y divide-line md:hidden">

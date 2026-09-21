@@ -66,6 +66,22 @@ export function ultimosMeses(n: number): string[] {
   });
 }
 
+/** Nombre completo del mes de hace `n` meses (0 = actual), ej: "Agosto 2026". */
+export function mesHace(n: number): string {
+  const base = new Date();
+  const d = new Date(base.getFullYear(), base.getMonth() - n, 15);
+  return capitalizar(
+    new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric", timeZone: TZ }).format(d).replace(" de ", " "),
+  );
+}
+
+/** Igual que fechaEnDias, pero un mes después. Ej: hoy 21/09 y n=5 → "26 de octubre". */
+export function fechaEnDiasProximoMes(n: number): string {
+  const d = new Date(Date.now() + n * 24 * 60 * 60 * 1000);
+  d.setMonth(d.getMonth() + 1);
+  return new Intl.DateTimeFormat("es-AR", { day: "numeric", month: "long", timeZone: TZ }).format(d);
+}
+
 /** Fecha a N días desde hoy (N puede ser negativo), ej: "25 de septiembre". */
 export function fechaEnDias(n: number): string {
   const d = new Date(Date.now() + n * 24 * 60 * 60 * 1000);

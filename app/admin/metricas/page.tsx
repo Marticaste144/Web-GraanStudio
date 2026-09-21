@@ -4,7 +4,7 @@ import {
   DISTRIBUCION_MEDIOS,
   DISTRIBUCION_PLANES,
   INGRESOS_DEL_MES,
-  INGRESOS_SERIE,
+  INGRESOS_MESES_ANTERIORES,
   OCUPACION_POR_ACTIVIDAD,
   OCUPACION_POR_DIA,
   OCUPACION_POR_FRANJA,
@@ -17,8 +17,8 @@ import { ultimosMeses } from "@/lib/fechas";
 export const dynamic = "force-dynamic";
 
 export default function AdminMetricas() {
-  const meses = ultimosMeses(INGRESOS_SERIE.length);
-  const maximo = Math.max(...INGRESOS_SERIE);
+  const meses = ultimosMeses(INGRESOS_MESES_ANTERIORES.length + 1);
+  const maximo = Math.max(...INGRESOS_MESES_ANTERIORES, INGRESOS_DEL_MES);
 
   return (
     <main className="mx-auto max-w-[90rem] px-4 pb-16 pt-8 sm:px-8 lg:px-10 lg:pt-12">
@@ -32,16 +32,12 @@ export default function AdminMetricas() {
       </div>
 
       <div className="mt-5 grid items-start gap-5 lg:mt-6 lg:gap-6 xl:grid-cols-2">
-        <Tarjeta titulo="Ingresos por mes" subtitulo="Últimos 6 meses">
+        {/* Meses anteriores: el mes en curso ya está arriba, en "Ingresos del mes". */}
+        <Tarjeta titulo="Ingresos de meses anteriores" subtitulo="Comparativo, sin el mes en curso">
           <ul className="space-y-4">
-            {INGRESOS_SERIE.map((v, i) => (
+            {INGRESOS_MESES_ANTERIORES.map((v, i) => (
               <li key={i}>
-                <Barra
-                  etiqueta={meses[i]}
-                  valor={formatoPeso(v)}
-                  porcentaje={(v / maximo) * 100}
-                  color={i === INGRESOS_SERIE.length - 1 ? "sage" : "taupe"}
-                />
+                <Barra etiqueta={meses[i]} valor={formatoPeso(v)} porcentaje={(v / maximo) * 100} color="taupe" />
               </li>
             ))}
           </ul>

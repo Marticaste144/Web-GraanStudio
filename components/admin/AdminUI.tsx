@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { Importe } from "@/components/ui/Importe";
 import type { EstadoPago } from "@/lib/data/admin";
 
 /** Encabezado de cada pantalla del admin. */
@@ -100,7 +101,7 @@ export function Metrica({
           className="whitespace-nowrap font-serif leading-[1.1] tabular-nums"
           style={{ fontSize: "clamp(1.6rem, 15cqw, 2.9rem)" }}
         >
-          {valor}
+          <Importe valor={valor} />
         </p>
       </div>
       <p className={`mt-2 text-xs ${oscura ? "text-cream/75" : "text-ink-soft"}`}>{nota}</p>

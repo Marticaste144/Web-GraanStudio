@@ -16,11 +16,7 @@ export function MisClasesVista({ hoy }: { hoy: Dia }) {
       <PageHeader
         eyebrow="Mis clases"
         titulo="Tus clases semanales"
-        subtitulo={
-          misClases.length > 0
-            ? `${misClases.length} ${misClases.length === 1 ? "clase" : "clases"} por semana, de lunes a viernes.`
-            : undefined
-        }
+        subtitulo={misClases.length > 0 ? "Tu cronograma de lunes a viernes." : undefined}
         accion={
           <Link href="/alumno/ver-clases" className="btn btn-outline hidden sm:inline-flex">
             <Plus size={16} />

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminHeader, Barra, EstadoBadge, Metrica, Tarjeta } from "@/components/admin/AdminUI";
+import { Importe } from "@/components/ui/Importe";
 import { getActividad } from "@/lib/data/actividades";
 import {
   ALUMNAS_ACTIVAS,
@@ -8,6 +9,7 @@ import {
   OCUPACION_PROMEDIO,
   PAGOS_PENDIENTES,
   PAGOS_RECIENTES,
+  PENDIENTE_DE_COBRO,
 } from "@/lib/data/admin";
 import { formatoPeso } from "@/lib/data/alumna";
 import { CAPACIDAD, ocupadasDe } from "@/lib/data/cupos";
@@ -41,15 +43,11 @@ export default async function AdminInicio({ searchParams }: { searchParams: Prom
         <Metrica etiqueta="Alumnas activas" valor={String(ALUMNAS_ACTIVAS)} nota="con al menos una clase semanal" />
         <Metrica etiqueta="Ingresos del mes" valor={formatoPeso(INGRESOS_DEL_MES)} nota="cuotas aprobadas" tono="oscura" />
         <Metrica etiqueta="Ocupación promedio" valor={`${OCUPACION_PROMEDIO}%`} nota="de todos los horarios de la semana" tono="sage" />
-        <Metrica etiqueta="Clases hoy" valor={String(clasesHoy.length)} nota={hoy.etiqueta} />
+        <Metrica etiqueta="Clases hoy" valor={String(clasesHoy.length)} nota="programadas para hoy" />
       </div>
 
       <div className="mt-5 grid gap-5 lg:mt-6 lg:gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Tarjeta
-          titulo="Agenda de hoy"
-          subtitulo={hoy.etiqueta}
-          enlace={{ href: "/admin/clases", texto: "Ver todas las clases" }}
-        >
+        <Tarjeta titulo="Agenda de hoy" enlace={{ href: "/admin/clases", texto: "Ver todas las clases" }}>
           <ul className="divide-y divide-line">
             {clasesHoy.map((c) => {
               const ocupadas = ocupadasDe(c);
@@ -89,21 +87,20 @@ export default async function AdminInicio({ searchParams }: { searchParams: Prom
             </ul>
           </Tarjeta>
 
-          <Tarjeta
-            titulo="Pagos por aprobar"
-            subtitulo={`${PAGOS_PENDIENTES.length} comprobantes esperando revisión`}
-            enlace={{ href: "/admin/pagos", texto: "Ir a pagos" }}
-          >
-            <ul className="divide-y divide-line">
-              {PAGOS_PENDIENTES.slice(0, 3).map((p) => (
-                <li key={p.id} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2.5">
-                  <span className="text-sm font-medium text-taupe-dark">
-                    {p.nombre} {p.apellido}
-                  </span>
-                  <span className="text-sm tabular-nums text-ink-soft">{formatoPeso(p.monto)}</span>
-                </li>
-              ))}
-            </ul>
+          {/* Resumen (no lista de personas): el detalle de cada pago ya está en "Pagos recientes" y en Pagos. */}
+          <Tarjeta titulo="Pagos por aprobar" enlace={{ href: "/admin/pagos", texto: "Ir a pagos" }}>
+            <dl className="grid grid-cols-2 gap-4">
+              <div className="min-w-0">
+                <dd className="font-serif text-4xl leading-none text-taupe-dark">{PAGOS_PENDIENTES.length}</dd>
+                <dt className="mt-2 text-xs text-ink-soft">comprobantes por revisar</dt>
+              </div>
+              <div className="min-w-0">
+                <dd className="whitespace-nowrap font-serif text-4xl leading-none text-taupe-dark">
+                  <Importe valor={formatoPeso(PENDIENTE_DE_COBRO)} />
+                </dd>
+                <dt className="mt-2 text-xs text-ink-soft">pendiente de cobro</dt>
+              </div>
+            </dl>
           </Tarjeta>
         </div>
       </div>

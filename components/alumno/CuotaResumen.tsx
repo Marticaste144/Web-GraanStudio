@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ArrowRight, CalendarClock } from "lucide-react";
+import { Importe } from "@/components/ui/Importe";
 import { formatoPeso } from "@/lib/data/alumna";
 import { useAlumno } from "./AlumnoProvider";
 
@@ -33,7 +34,9 @@ export function CuotaResumen({ mes, vence }: { mes: string; vence: string }) {
         </div>
         {plan ? (
           <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-            <span className="font-serif text-[2.2rem] leading-none text-taupe-dark">{formatoPeso(plan.monto)}</span>
+            <span className="font-serif text-[2.2rem] leading-none text-taupe-dark">
+              <Importe valor={formatoPeso(plan.monto)} />
+            </span>
             <span className="text-xs text-ink-soft">{plan.nombre}</span>
           </p>
         ) : (
