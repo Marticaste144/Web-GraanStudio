@@ -128,18 +128,20 @@ model Alumna {
 
 model Profesora {
   id        String   @id @default(cuid())
-  nombre    String
+  nombre    String   @unique
   activa    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  clases ClaseRecurrente[]
+  clases              ClaseRecurrente[]
+  /// Ocurrencias donde efectivamente dictó la clase (puede diferir de la profesora programada: reemplazos).
+  ocurrenciasComoReal ClaseOcurrencia[]
 }
 
 model Disciplina {
   id        String   @id @default(cuid())
-  nombre    String
-  /// true = se coordina a consulta (sin grilla fija), como Yoga Mamá / Esfero Mamá hoy.
+  nombre    String   @unique
+  /// true = se coordina a consulta (sin grilla fija todavía), como "Clases para embarazadas".
   aConsulta Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -157,23 +159,38 @@ model ClaseRecurrente {
   dia           String
   /// "HH:MM"
   hora          String
+  /// Capacidad máxima de la clase. Editable por clase (no hay un valor fijo único para todas).
   cupo          Int
+  /// Baja lógica: no se borra la fila (preserva historial de ocurrencias/asistencia futura).
   activa        Boolean  @default(true)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   ocurrencias ClaseOcurrencia[]
 
-  @@index([dia, hora])
+  /// Un solo horario recurrente por día+hora (la grilla del estudio no admite dos clases en el mismo lugar).
+  @@unique([dia, hora])
+}
+
+enum EstadoOcurrencia {
+  PROGRAMADA
+  DICTADA
+  CANCELADA
 }
 
 /// Ocurrencia concreta de una clase recurrente en una fecha puntual (para asistencia/recuperaciones).
+/// Fecha/disciplina/profesora "programada" se leen siempre desde claseRecurrente (no se duplican acá);
+/// profesoraRealId existe para registrar reemplazos cuando quien dio la clase no fue la programada.
 model ClaseOcurrencia {
   id                String   @id @default(cuid())
   claseRecurrenteId String
   claseRecurrente   ClaseRecurrente @relation(fields: [claseRecurrenteId], references: [id], onDelete: Cascade)
   fecha             DateTime
-  estado            String   @default("programada")
+  /// Quién dictó efectivamente la clase, si difiere (o se confirmó) respecto de claseRecurrente.profesora.
+  /// null = todavía sin confirmar / se asume la profesora programada.
+  profesoraRealId   String?
+  profesoraReal     Profesora? @relation(fields: [profesoraRealId], references: [id], onDelete: SetNull)
+  estado            EstadoOcurrencia @default(PROGRAMADA)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
