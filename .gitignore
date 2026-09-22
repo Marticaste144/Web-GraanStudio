@@ -3,4 +3,14 @@ node_modules
 out
 next-env.d.ts
 *.tsbuildinfo
-.env*.local
+
+# Secretos: nunca commitear .env con valores reales (.env.example sí se versiona)
+.env
+.env.*
+!.env.example
+
+# Almacenamiento privado local (comprobantes, etc. en dev)
+.private-uploads
+
+# Configuración local del editor/Claude Code (no es del proyecto)
+.claude/

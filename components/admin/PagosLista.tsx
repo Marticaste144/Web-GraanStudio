@@ -5,6 +5,8 @@ import { Check, Search } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import type { EstadoPago, Pago } from "@/lib/data/admin";
 import { formatoPeso } from "@/lib/data/alumna";
+import { useAdminSession } from "@/components/admin/AdminSessionProvider";
+import { can } from "@/lib/auth/rbac";
 import { useAdminAlumnas } from "./AdminAlumnasProvider";
 import { EstadoBadge, Metrica, Tarjeta } from "./AdminUI";
 
@@ -23,6 +25,9 @@ const norm = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").to
 
 export function PagosLista({ pagos: pagosBase, busquedaInicial = "" }: { pagos: PagoConFecha[]; busquedaInicial?: string }) {
   const toast = useToast();
+  const { role } = useAdminSession();
+  // Montos agregados (recaudación total del negocio): exclusivos de OWNER, mismo permiso que Métricas.
+  const puedeVerFinanzas = can(role, "admin:financials");
   const { nuevas, datos } = useAdminAlumnas();
   // Las alumnas dadas de alta en el Admin tienen su cuota del mes pendiente y todavía no registraron pago (sin fecha).
   const pagos: PagoConFecha[] = [...nuevas.map((a) => ({ ...datos(a), fecha: "—" })), ...pagosBase];
@@ -59,9 +64,18 @@ export function PagosLista({ pagos: pagosBase, busquedaInicial = "" }: { pagos: 
 
   return (
     <>
-      <div className="mt-8 grid gap-4 min-[560px]:grid-cols-3 lg:gap-5">
-        <Metrica etiqueta="Cobrado en el mes" valor={formatoPeso(cobrado)} nota="cuotas aprobadas" tono="oscura" />
-        <Metrica etiqueta="Pendiente de cobro" valor={formatoPeso(pendiente)} nota={`${cantPendientes} comprobantes por revisar`} tono="sage" />
+      <div className={`mt-8 grid gap-4 lg:gap-5 ${puedeVerFinanzas ? "min-[560px]:grid-cols-3" : ""}`}>
+        {puedeVerFinanzas && (
+          <>
+            <Metrica etiqueta="Cobrado en el mes" valor={formatoPeso(cobrado)} nota="cuotas aprobadas" tono="oscura" />
+            <Metrica
+              etiqueta="Pendiente de cobro"
+              valor={formatoPeso(pendiente)}
+              nota={`${cantPendientes} comprobantes por revisar`}
+              tono="sage"
+            />
+          </>
+        )}
         <Metrica etiqueta="Pagos registrados" valor={String(pagos.length)} nota="uno por alumna activa" />
       </div>
 

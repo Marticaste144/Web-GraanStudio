@@ -3,16 +3,12 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/components/ui/Toast";
-import { useAlumno } from "@/components/alumno/AlumnoProvider";
 import { loginAction } from "@/lib/auth/actions";
 import { AuthShell } from "./AuthShell";
 import { Campo } from "./Campo";
 
-export function LoginForm({ destino }: { destino: string }) {
+export function AdminLoginForm({ destino }: { destino: string }) {
   const router = useRouter();
-  const toast = useToast();
-  const { iniciarSesion } = useAlumno();
   const [error, setError] = useState<string | null>(null);
   const [pendiente, iniciar] = useTransition();
 
@@ -24,36 +20,29 @@ export function LoginForm({ destino }: { destino: string }) {
     const password = String(f.get("password") ?? "");
 
     iniciar(async () => {
-      const resultado = await loginAction("alumno", email, password);
+      const resultado = await loginAction("admin", email, password);
       if (!resultado.ok) {
         setError(resultado.error);
         return;
       }
-      // El contenido del portal todavía es una demo (ver lib/data/alumna.ts); la cuenta real
-      // ya quedó autenticada y protegida server-side.
-      iniciarSesion();
-      toast("Sesión iniciada.");
-      router.push(resultado.redirectTo === "/alumno" ? destino : resultado.redirectTo);
+      router.push(resultado.redirectTo === "/admin" ? destino : resultado.redirectTo);
       router.refresh();
     });
   };
 
   return (
     <AuthShell
-      eyebrow="Portal de alumnas"
+      eyebrow="Administración"
       titulo={
         <>
-          Iniciar <span className="italic text-sage-deep">sesión</span>
+          Panel de <span className="italic text-sage-deep">administración</span>
         </>
       }
-      descripcion="Ingresá para ver tus clases, reservar horarios y consultar tu cuota."
+      descripcion="Acceso exclusivo para el equipo de Graan Studio."
       pie={
-        <>
-          ¿Todavía no tenés cuenta?{" "}
-          <Link href="/registro" className="font-medium text-taupe-dark underline underline-offset-4">
-            Crear cuenta
-          </Link>
-        </>
+        <Link href="/" className="font-medium text-taupe-dark underline underline-offset-4">
+          Volver al sitio
+        </Link>
       }
     >
       <form className="space-y-5" onSubmit={enviar}>

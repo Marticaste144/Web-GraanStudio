@@ -11,10 +11,15 @@ import {
 } from "@/lib/data/admin";
 import { formatoPeso } from "@/lib/data/alumna";
 import { ultimosMeses } from "@/lib/fechas";
+import { requireRole } from "@/lib/auth/guard";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminMetricas() {
+export default async function AdminMetricas() {
+  // Información financiera/global del negocio: exclusiva de OWNER (ver app/admin/layout.tsx
+  // para la protección general de /admin, que ya exige OWNER o ADMIN).
+  await requireRole("admin:financials", { unauthenticatedRedirect: "/admin/login", unauthorizedRedirect: "/admin" });
+
   const meses = ultimosMeses(INGRESOS_MESES_ANTERIORES.length + 1);
   const maximo = Math.max(...INGRESOS_MESES_ANTERIORES, INGRESOS_DEL_MES);
 

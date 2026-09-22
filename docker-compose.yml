@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: graan
+      POSTGRES_PASSWORD: graan_dev_local
+      POSTGRES_DB: graan_studio
+    ports:
+      # 5433 (no 5432): esta máquina tiene otros proyectos con Postgres en 5432; se evita el choque.
+      - "5433:5432"
+    volumes:
+      - graan_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  graan_postgres_data:

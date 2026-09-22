@@ -1,0 +1,295 @@
+// Base de datos real de Graan Studio.
+//
+// Este bloque construye el núcleo de autenticación/roles con lógica completa (User, Session,
+// PasswordResetToken, AuditLog) y deja pensadas las relaciones principales del resto del negocio
+// (alumnas, clases, packs, pagos, asistencias...) para no tener que rehacer el esquema en los
+// próximos bloques. Esas entidades de dominio todavía NO tienen Server Actions ni UI conectada.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  // DATABASE_URL: pooler en modo transacción (Supabase, puerto 6543) — la usa la app en runtime.
+  url       = env("DATABASE_URL")
+  // DIRECT_URL: pooler en modo sesión / conexión directa (puerto 5432) — la usa Prisma Migrate,
+  // que necesita funciones de sesión (advisory locks) que el pooler en modo transacción no soporta.
+  directUrl = env("DIRECT_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Autenticación, roles y auditoría
+// ---------------------------------------------------------------------------
+
+enum Role {
+  OWNER
+  ADMIN
+  STUDENT
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  /// Formato "salt:hash" (scrypt). Nunca texto plano.
+  passwordHash String
+  role        Role
+  /// Nombre a mostrar en la interfaz (ej. "Graziella", "Vicky y Amy").
+  displayName String
+  isActive    Boolean  @default(true)
+  /// Cuenta de soporte/desarrollo (Martina): queda identificada para poder desactivarla o borrarla.
+  isSupport   Boolean  @default(false)
+  /// Obliga a cambiar la contraseña en el próximo ingreso (cuentas recién sembradas o tras un reset).
+  mustChangePassword Boolean @default(true)
+  lastLoginAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]
+  alumna              Alumna?
+
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 del token que vive en la cookie. El token crudo nunca se persiste.
+  tokenHash String   @unique
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SHA-256 del token que va en el link del email. El token crudo nunca se persiste.
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// Auditoría base de acciones sensibles. Nunca guarda contraseñas, tokens ni comprobantes completos.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorUserId String?
+  actor      User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  /// Copia del rol al momento de la acción (se conserva aunque el usuario cambie de rol después).
+  actorRole  Role?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// ---------------------------------------------------------------------------
+// Dominio del estudio — solo esquema y relaciones (sin Server Actions/UI todavía).
+// Pensado para soportar, sin rehacer la base: alumnas, profesoras, disciplinas, clases
+// recurrentes y sus ocurrencias por fecha, packs, señas, pagos, comprobantes, asistencias,
+// ausencias y recuperaciones.
+// ---------------------------------------------------------------------------
+
+model Alumna {
+  id        String   @id @default(cuid())
+  /// Cuenta de login vinculada (rol STUDENT). Opcional: puede existir una ficha sin cuenta todavía.
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  nombre    String
+  apellido  String
+  telefono  String?
+  dni       String?
+  activa    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  asignacionesPack AsignacionPack[]
+  senas            Sena[]
+  pagos            Pago[]
+  comprobantes     Comprobante[]
+  asistencias      Asistencia[]
+  ausencias        Ausencia[]
+  recuperaciones   Recuperacion[]
+}
+
+model Profesora {
+  id        String   @id @default(cuid())
+  nombre    String
+  activa    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clases ClaseRecurrente[]
+}
+
+model Disciplina {
+  id        String   @id @default(cuid())
+  nombre    String
+  /// true = se coordina a consulta (sin grilla fija), como Yoga Mamá / Esfero Mamá hoy.
+  aConsulta Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  clases ClaseRecurrente[]
+}
+
+model ClaseRecurrente {
+  id            String   @id @default(cuid())
+  disciplinaId  String
+  disciplina    Disciplina @relation(fields: [disciplinaId], references: [id], onDelete: Restrict)
+  profesoraId   String
+  profesora     Profesora  @relation(fields: [profesoraId], references: [id], onDelete: Restrict)
+  /// "lunes".."viernes", igual que Dia en lib/data/horarios.ts.
+  dia           String
+  /// "HH:MM"
+  hora          String
+  cupo          Int
+  activa        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  ocurrencias ClaseOcurrencia[]
+
+  @@index([dia, hora])
+}
+
+/// Ocurrencia concreta de una clase recurrente en una fecha puntual (para asistencia/recuperaciones).
+model ClaseOcurrencia {
+  id                String   @id @default(cuid())
+  claseRecurrenteId String
+  claseRecurrente   ClaseRecurrente @relation(fields: [claseRecurrenteId], references: [id], onDelete: Cascade)
+  fecha             DateTime
+  estado            String   @default("programada")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  asistencias            Asistencia[]
+  ausencias              Ausencia[]
+  recuperacionesDestino  Recuperacion[]
+
+  @@unique([claseRecurrenteId, fecha])
+}
+
+model Pack {
+  id               String   @id @default(cuid())
+  nombre           String
+  clasesPorSemana  Int
+  monto            Int
+  activo           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  asignaciones AsignacionPack[]
+}
+
+model AsignacionPack {
+  id        String    @id @default(cuid())
+  alumnaId  String
+  alumna    Alumna    @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  packId    String
+  pack      Pack      @relation(fields: [packId], references: [id], onDelete: Restrict)
+  desde     DateTime
+  hasta     DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([alumnaId])
+}
+
+model Sena {
+  id        String   @id @default(cuid())
+  alumnaId  String
+  alumna    Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  monto     Int
+  estado    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([alumnaId])
+}
+
+model Pago {
+  id             String   @id @default(cuid())
+  alumnaId       String
+  alumna         Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  monto          Int
+  medio          String
+  estado         String
+  comprobanteId  String?  @unique
+  comprobante    Comprobante? @relation(fields: [comprobanteId], references: [id], onDelete: SetNull)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([alumnaId])
+}
+
+/// Metadata del comprobante subido. El archivo en sí vive en el storage privado (lib/storage),
+/// nunca en una URL pública permanente.
+model Comprobante {
+  id               String   @id @default(cuid())
+  alumnaId         String
+  alumna           Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  storageKey       String   @unique
+  mimeType         String
+  uploadedByUserId String?
+  createdAt        DateTime @default(now())
+
+  pago Pago?
+
+  @@index([alumnaId])
+}
+
+model Asistencia {
+  id                String   @id @default(cuid())
+  alumnaId          String
+  alumna            Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  claseOcurrenciaId String
+  claseOcurrencia   ClaseOcurrencia @relation(fields: [claseOcurrenciaId], references: [id], onDelete: Cascade)
+  presente          Boolean
+  createdAt         DateTime @default(now())
+
+  @@unique([alumnaId, claseOcurrenciaId])
+}
+
+model Ausencia {
+  id                String   @id @default(cuid())
+  alumnaId          String
+  alumna            Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  claseOcurrenciaId String
+  claseOcurrencia   ClaseOcurrencia @relation(fields: [claseOcurrenciaId], references: [id], onDelete: Cascade)
+  motivo            String?
+  createdAt         DateTime @default(now())
+
+  recuperacion Recuperacion?
+
+  @@unique([alumnaId, claseOcurrenciaId])
+}
+
+model Recuperacion {
+  id                        String   @id @default(cuid())
+  alumnaId                  String
+  alumna                    Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  ausenciaId                String?  @unique
+  ausencia                  Ausencia? @relation(fields: [ausenciaId], references: [id], onDelete: SetNull)
+  claseOcurrenciaDestinoId   String?
+  claseOcurrenciaDestino     ClaseOcurrencia? @relation(fields: [claseOcurrenciaDestinoId], references: [id], onDelete: SetNull)
+  estado                    String
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@index([alumnaId])
+}

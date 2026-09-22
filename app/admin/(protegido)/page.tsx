@@ -11,19 +11,24 @@ import {
 } from "@/lib/data/admin";
 import { formatoPeso } from "@/lib/data/alumna";
 import { fechaCortaEnDias, resolverDia } from "@/lib/fechas";
+import { getCurrentUser } from "@/lib/auth/current-user";
+import { can } from "@/lib/auth/rbac";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminInicio({ searchParams }: { searchParams: Promise<{ dia?: string }> }) {
   const { dia } = await searchParams;
   const hoy = resolverDia(dia);
+  const user = await getCurrentUser();
+  // Ingresos/montos agregados del negocio: exclusivos de OWNER (mismo permiso que Métricas).
+  const puedeVerFinanzas = can(user?.role, "admin:financials");
 
   return (
     <main className="mx-auto max-w-[90rem] px-4 pb-16 pt-8 sm:px-8 lg:px-10 lg:pt-12">
       <AdminHeader
         titulo={
           <>
-            Buen día, <span className="italic text-sage-deep">Graziella</span>
+            Buen día, <span className="italic text-sage-deep">{user?.displayName ?? ""}</span>
           </>
         }
         subtitulo={`Resumen de ${hoy.etiqueta.toLowerCase()}.`}
@@ -34,9 +39,11 @@ export default async function AdminInicio({ searchParams }: { searchParams: Prom
         }
       />
 
-      <div className="mt-8 grid gap-4 min-[560px]:grid-cols-2 xl:grid-cols-4 lg:gap-5">
+      <div className={`mt-8 grid gap-4 min-[560px]:grid-cols-2 lg:gap-5 ${puedeVerFinanzas ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}>
         <MetricaAlumnasActivas />
-        <Metrica etiqueta="Ingresos del mes" valor={formatoPeso(INGRESOS_DEL_MES)} nota="cuotas aprobadas" tono="oscura" />
+        {puedeVerFinanzas && (
+          <Metrica etiqueta="Ingresos del mes" valor={formatoPeso(INGRESOS_DEL_MES)} nota="cuotas aprobadas" tono="oscura" />
+        )}
         <MetricaOcupacion nota="de todos los horarios de la semana" tono="sage" />
         <MetricaClasesHoy dia={hoy.dia} />
       </div>
@@ -49,10 +56,13 @@ export default async function AdminInicio({ searchParams }: { searchParams: Prom
 
           {/* Resumen (no lista de personas): el detalle de cada pago ya está en "Pagos recientes" y en Pagos. */}
           <Tarjeta titulo="Pagos por aprobar" enlace={{ href: "/admin/pagos", texto: "Ir a pagos" }}>
-            <dl className="grid grid-cols-2 gap-4">
+            <dl className={`grid gap-4 ${puedeVerFinanzas ? "grid-cols-2" : "grid-cols-1"}`}>
               {[
                 { valor: <>{PAGOS_PENDIENTES.length}</>, etiqueta: "comprobantes por revisar" },
-                { valor: <Importe valor={formatoPeso(PENDIENTE_DE_COBRO)} />, etiqueta: "pendiente de cobro" },
+                // Monto agregado (recaudación pendiente del negocio): exclusivo de OWNER.
+                ...(puedeVerFinanzas
+                  ? [{ valor: <Importe valor={formatoPeso(PENDIENTE_DE_COBRO)} />, etiqueta: "pendiente de cobro" }]
+                  : []),
               ].map((x) => (
                 <div key={x.etiqueta} className="min-w-0">
                   {/* El tamaño del número se adapta al ancho disponible: nunca se corta ni desborda. */}

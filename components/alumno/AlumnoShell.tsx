@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { CalendarDays, CreditCard, Home, Search, User, type LucideProps } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
+import { logoutAction } from "@/lib/auth/actions";
 import { useAlumno } from "./AlumnoProvider";
 
 interface Item {
@@ -31,8 +32,15 @@ const PERFIL = ITEMS[4];
  */
 export function AlumnoShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { usuario } = useAlumno();
   const enPerfil = PERFIL.activo(pathname);
+
+  const salir = async () => {
+    await logoutAction();
+    router.push("/login");
+    router.refresh();
+  };
 
   return (
     <div className="min-h-dvh bg-cream">
@@ -76,9 +84,13 @@ export function AlumnoShell({ children }: { children: React.ReactNode }) {
               </span>
               <span className="hidden text-sm text-ink lg:block">{usuario.nombre}</span>
             </Link>
-            <Link href="/" className="hidden text-xs tracking-wide text-ink-soft hover:text-taupe-dark lg:block">
+            <button
+              type="button"
+              onClick={salir}
+              className="hidden text-xs tracking-wide text-ink-soft hover:text-taupe-dark lg:block"
+            >
               Salir
-            </Link>
+            </button>
           </div>
         </div>
       </header>
