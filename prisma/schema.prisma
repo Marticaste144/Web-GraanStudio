@@ -49,6 +49,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   auditLogs           AuditLog[]
   alumna              Alumna?
+  senasRegistradas    Sena[]
 
   @@index([role])
 }
@@ -224,6 +225,8 @@ model PlanPack {
 }
 
 enum EstadoCompraPack {
+  /// Reservado/creado pero todavía no empezó según el flujo (ej. esperando confirmación).
+  PENDIENTE
   ACTIVO
   FINALIZADO
   CANCELADO
@@ -255,8 +258,18 @@ model CompraPack {
   updatedAt         DateTime @updatedAt
 
   pagos Pago[]
+  senas Sena[]
 
   @@index([alumnaId])
+}
+
+enum EstadoSena {
+  /// Cobrada, todavía no aplicada a ningún pack ni retenida.
+  PENDIENTE
+  /// Ya se descontó del precio de un CompraPack (ver compraPackId/fechaAplicacion).
+  APLICADA
+  /// La alumna no se presentó: Graan se queda con el monto, no se aplica a ningún pack.
+  RETENIDA
 }
 
 model Sena {
@@ -264,11 +277,23 @@ model Sena {
   alumnaId  String
   alumna    Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
   monto     Int
-  estado    String
+  /// Fecha real de la seña (puede diferir de createdAt si se carga con demora).
+  fecha     DateTime @default(now())
+  /// "Efectivo" / "Transferencia". Opcional por si se registra sin especificar todavía.
+  medio     String?
+  estado    EstadoSena @default(PENDIENTE)
+  /// A qué compra se aplicó, cuando estado=APLICADA.
+  compraPackId     String?
+  compraPack       CompraPack? @relation(fields: [compraPackId], references: [id], onDelete: SetNull)
+  fechaAplicacion  DateTime?
+  /// Quién la registró/confirmó (queda además en AuditLog).
+  registradoPorUserId String?
+  registradoPor       User?   @relation(fields: [registradoPorUserId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([alumnaId])
+  @@index([compraPackId])
 }
 
 model Pago {

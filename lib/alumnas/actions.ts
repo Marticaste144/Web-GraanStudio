@@ -126,52 +126,5 @@ export async function cambiarEstadoAlumnaAction(id: string, activa: boolean): Pr
   return { ok: true };
 }
 
-export interface DatosCompraPack {
-  planPackId?: string;
-  clasesContratadas: number;
-  precioAplicado: number;
-  fechaInicio: string; // ISO yyyy-mm-dd
-  fechaFin?: string; // ISO yyyy-mm-dd, opcional
-}
-
-/** Crea un pack nuevo (alta o renovación). Nunca modifica un CompraPack anterior. */
-export async function crearCompraPackAction(alumnaId: string, datos: DatosCompraPack): Promise<ActionResult<{ id: string }>> {
-  const user = await requireAdmin();
-  if (!user) return { ok: false, error: "No autorizado." };
-
-  const alumna = await prisma.alumna.findUnique({ where: { id: alumnaId } });
-  if (!alumna) return { ok: false, error: "La alumna no existe." };
-
-  if (!Number.isInteger(datos.clasesContratadas) || datos.clasesContratadas < 1) {
-    return { ok: false, error: "La cantidad de clases tiene que ser un número de 1 o más." };
-  }
-  if (!Number.isInteger(datos.precioAplicado) || datos.precioAplicado < 0) {
-    return { ok: false, error: "El precio no puede ser negativo." };
-  }
-  const fechaInicio = new Date(datos.fechaInicio);
-  if (isNaN(fechaInicio.getTime())) return { ok: false, error: "La fecha de inicio no es válida." };
-  const fechaFin = datos.fechaFin ? new Date(datos.fechaFin) : null;
-  if (fechaFin && isNaN(fechaFin.getTime())) return { ok: false, error: "La fecha de fin no es válida." };
-
-  const compra = await prisma.compraPack.create({
-    data: {
-      alumnaId,
-      planPackId: datos.planPackId || null,
-      clasesContratadas: datos.clasesContratadas,
-      precioAplicado: datos.precioAplicado,
-      fechaInicio,
-      fechaFin,
-      clasesTomadas: 0,
-      clasesRestantes: datos.clasesContratadas,
-      estado: "ACTIVO",
-    },
-  });
-
-  await registrarAuditoria({
-    actorUserId: user.id, actorRole: user.role,
-    action: "packs.crear", entityType: "CompraPack", entityId: compra.id,
-    metadata: { alumnaId, clases: datos.clasesContratadas, precio: datos.precioAplicado },
-  });
-
-  return { ok: true, id: compra.id };
-}
+// La gestión de CompraPack (crear/renovar/cancelar/estados), pagos y señas vive en
+// lib/packs/actions.ts desde el Bloque 4.

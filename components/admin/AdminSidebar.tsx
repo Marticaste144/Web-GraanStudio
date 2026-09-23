@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { BarChart3, CalendarDays, CreditCard, LayoutDashboard, LogOut, Users, type LucideProps } from "lucide-react";
+import { BarChart3, CalendarDays, CreditCard, LayoutDashboard, LogOut, Tag, Users, type LucideProps } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { useAdminSession } from "@/components/admin/AdminSessionProvider";
 import { logoutAction } from "@/lib/auth/actions";
@@ -20,6 +20,7 @@ const ITEMS: ItemNav[] = [
   { label: "Alumnos", icon: Users, href: "/admin/alumnos" },
   { label: "Clases", icon: CalendarDays, href: "/admin/clases" },
   { label: "Pagos", icon: CreditCard, href: "/admin/pagos" },
+  { label: "Precios", icon: Tag, href: "/admin/precios", soloOwner: true },
   { label: "Métricas", icon: BarChart3, href: "/admin/metricas", soloOwner: true },
 ];
 
