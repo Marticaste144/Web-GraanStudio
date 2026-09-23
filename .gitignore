@@ -14,3 +14,6 @@ next-env.d.ts
 
 # Configuración local del editor/Claude Code (no es del proyecto)
 .claude/
+
+# Datos personales reales para la importación del Bloque 3: nunca se commitea.
+/importacion-temporal/

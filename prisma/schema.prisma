@@ -112,18 +112,25 @@ model Alumna {
   nombre    String
   apellido  String
   telefono  String?
-  dni       String?
+  /// Normalizado (solo dígitos) antes de guardar, para que la unicidad sea real. Null si no se conoce.
+  dni       String?  @unique
+  email     String?
+  /// Texto libre migrado de la planilla histórica (ej. "Pilates Ref, Metodo Barre"). No vincula
+  /// todavía con ClaseRecurrente: eso se resuelve en el bloque de grilla real de alumnas.
+  disciplinas   String?
+  /// Texto libre migrado (ej. "Lunes 17hs y Miercoles 18hs"). Mismo motivo que `disciplinas`.
+  diasHorarios  String?
   activa    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  asignacionesPack AsignacionPack[]
-  senas            Sena[]
-  pagos            Pago[]
-  comprobantes     Comprobante[]
-  asistencias      Asistencia[]
-  ausencias        Ausencia[]
-  recuperaciones   Recuperacion[]
+  comprasPack    CompraPack[]
+  senas          Sena[]
+  pagos          Pago[]
+  comprobantes   Comprobante[]
+  asistencias    Asistencia[]
+  ausencias      Ausencia[]
+  recuperaciones Recuperacion[]
 }
 
 model Profesora {
@@ -201,28 +208,53 @@ model ClaseOcurrencia {
   @@unique([claseRecurrenteId, fecha])
 }
 
-model Pack {
-  id               String   @id @default(cuid())
-  nombre           String
-  clasesPorSemana  Int
-  monto            Int
-  activo           Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+/// Catálogo de precios VIGENTES (editable por OWNER). Cambiar un precio acá nunca toca las
+/// compras ya hechas: cada CompraPack guarda su propio precioAplicado como snapshot histórico.
+model PlanPack {
+  id        String   @id @default(cuid())
+  /// Cantidad de clases del plan comercial (4, 8, 12, 16, 20). Único: no puede haber dos planes
+  /// vigentes con la misma cantidad de clases.
+  clases    Int      @unique
+  precio    Int
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  asignaciones AsignacionPack[]
+  compras CompraPack[]
 }
 
-model AsignacionPack {
-  id        String    @id @default(cuid())
-  alumnaId  String
-  alumna    Alumna    @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
-  packId    String
-  pack      Pack      @relation(fields: [packId], references: [id], onDelete: Restrict)
-  desde     DateTime
-  hasta     DateTime?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+enum EstadoCompraPack {
+  ACTIVO
+  FINALIZADO
+  CANCELADO
+}
+
+/// Cada compra o renovación de pack es una fila histórica independiente (nunca se sobrescribe
+/// la anterior). planPackId es opcional: los packs "atípicos" del historial (clase suelta, packs
+/// personalizados, sin cargo, excepciones) no corresponden a ningún plan comercial estándar.
+model CompraPack {
+  id                String   @id @default(cuid())
+  alumnaId          String
+  alumna            Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  planPackId        String?
+  planPack          PlanPack? @relation(fields: [planPackId], references: [id], onDelete: SetNull)
+  /// Snapshot: cantidad de clases realmente contratadas en ESTA compra (puede diferir del plan
+  /// estándar por excepciones históricas).
+  clasesContratadas Int
+  /// Snapshot: precio realmente aplicado a ESTA compra. Nunca se recalcula con precios vigentes.
+  precioAplicado    Int
+  fechaInicio       DateTime
+  /// Opcional: hay compras históricas sin fecha de fin registrada.
+  fechaFin          DateTime?
+  clasesTomadas     Int      @default(0)
+  clasesRestantes   Int      @default(0)
+  estado            EstadoCompraPack @default(ACTIVO)
+  /// Notas libres traídas de la migración histórica (excepciones, extensiones, aclaraciones).
+  notas             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  pagos Pago[]
 
   @@index([alumnaId])
 }
@@ -243,15 +275,26 @@ model Pago {
   id             String   @id @default(cuid())
   alumnaId       String
   alumna         Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  /// A qué compra de pack corresponde este pago, cuando se puede determinar.
+  compraPackId   String?
+  compraPack     CompraPack? @relation(fields: [compraPackId], references: [id], onDelete: SetNull)
   monto          Int
-  medio          String
+  /// Libre: "Efectivo" / "Transferencia" para operaciones nuevas. Valores históricos como
+  /// "Mercado Pago" se preservan tal cual (no se ofrecen en el alta de pagos nuevos, pero no se
+  /// fuerzan a otro valor). Opcional: algunos registros históricos confirman el pago sin dejar
+  /// asentado el método — no se inventa un valor.
+  medio          String?
   estado         String
+  /// Fecha real en que se registró el pago (histórica). Distinta de `createdAt`, que es cuándo
+  /// se creó la fila en este sistema. Opcional: hay algún registro histórico confirmado sin fecha.
+  fechaPago      DateTime?
   comprobanteId  String?  @unique
   comprobante    Comprobante? @relation(fields: [comprobanteId], references: [id], onDelete: SetNull)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   @@index([alumnaId])
+  @@index([compraPackId])
 }
 
 /// Metadata del comprobante subido. El archivo en sí vive en el storage privado (lib/storage),
