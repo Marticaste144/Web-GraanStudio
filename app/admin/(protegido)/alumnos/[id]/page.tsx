@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { FichaAlumnaReal } from "@/components/admin/FichaAlumnaReal";
 import { prisma } from "@/lib/prisma";
 import { calcularResumenPack } from "@/lib/packs/calculos";
+import { horariosVigentesDeAlumna, clasesRecurrentesConOcupacion } from "@/lib/grilla/consulta";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function FichaAlumnaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [alumna, senasDb, planPacks] = await Promise.all([
+  const [alumna, senasDb, planPacks, horariosHabituales, clasesDisponibles] = await Promise.all([
     prisma.alumna.findUnique({
       where: { id },
       include: {
@@ -23,6 +24,8 @@ export default async function FichaAlumnaPage({ params }: { params: Promise<{ id
     }),
     prisma.sena.findMany({ where: { alumnaId: id }, orderBy: { createdAt: "desc" }, include: { compraPack: true } }),
     prisma.planPack.findMany({ where: { activo: true }, orderBy: { clases: "asc" } }),
+    horariosVigentesDeAlumna(id),
+    clasesRecurrentesConOcupacion(),
   ]);
 
   if (!alumna) notFound();
@@ -57,6 +60,8 @@ export default async function FichaAlumnaPage({ params }: { params: Promise<{ id
         compraPackResumen: s.compraPack ? `${s.compraPack.clasesContratadas} clases · ${s.compraPack.fechaInicio.toISOString().slice(0, 10)}` : null,
       }))}
       planPacks={planPacks.map((p) => ({ id: p.id, clases: p.clases, precio: p.precio }))}
+      horariosHabituales={horariosHabituales}
+      clasesDisponibles={clasesDisponibles}
     />
   );
 }

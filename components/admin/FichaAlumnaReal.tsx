@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Ban, CheckCircle2, Pencil, Plus, UserCheck, UserX } from "lucide-react";
+import { Ban, CalendarClock, CheckCircle2, Pencil, Plus, UserCheck, UserX } from "lucide-react";
 import { Campo, Selector } from "@/components/auth/Campo";
 import { Modal } from "@/components/ui/Modal";
 import { useToast } from "@/components/ui/Toast";
@@ -25,6 +25,12 @@ import {
   type DatosSena,
 } from "@/lib/packs/actions";
 import { MEDIOS_PAGO_NUEVOS, MONTO_SENA_SUGERIDO } from "@/lib/packs/config";
+import {
+  asignarHorarioHabitualAction,
+  cambiarHorarioHabitualAction,
+  quitarHorarioHabitualAction,
+} from "@/lib/grilla/actions";
+import { nombreDia, type Dia } from "@/lib/data/horarios";
 import { AdminHeader, Tarjeta } from "./AdminUI";
 
 const formatoPeso = (n: number) => "$" + n.toLocaleString("es-AR", { maximumFractionDigits: 0 });
@@ -47,6 +53,8 @@ interface SenaFicha {
   compraPackId: string | null; compraPackResumen: string | null;
 }
 interface PlanPackOpcion { id: string; clases: number; precio: number }
+interface HorarioHabitualFicha { id: string; claseRecurrenteId: string; dia: string; hora: string; disciplinaNombre: string; profesoraNombre: string }
+interface ClaseRecurrenteOpcion { id: string; dia: string; hora: string; disciplinaNombre: string; profesoraNombre: string; cupo: number; ocupacion: number }
 
 function EstadoBadgeActiva({ activa }: { activa: boolean }) {
   return activa ? (
@@ -84,12 +92,15 @@ type Panel =
   | { tipo: "pago" | "cancelarPack"; compraId: string }
   | { tipo: "sena" }
   | { tipo: "aplicarSena" | "retenerSena"; senaId: string }
+  | { tipo: "horarioAgregar" }
+  | { tipo: "horarioCambiar" | "horarioQuitar"; horario: HorarioHabitualFicha }
   | null;
 
 export function FichaAlumnaReal({
-  alumna, comprasPack, senas, planPacks,
+  alumna, comprasPack, senas, planPacks, horariosHabituales, clasesDisponibles,
 }: {
   alumna: AlumnaFicha; comprasPack: CompraPackFicha[]; senas: SenaFicha[]; planPacks: PlanPackOpcion[];
+  horariosHabituales: HorarioHabitualFicha[]; clasesDisponibles: ClaseRecurrenteOpcion[];
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -202,6 +213,34 @@ export function FichaAlumnaReal({
             <button type="button" className="btn btn-primary btn-sm w-full sm:w-auto" onClick={() => setPanel({ tipo: "pack" })}>
               <Plus size={14} />
               {packAnterior ? "Renovar pack" : "Nuevo pack"}
+            </button>
+          </div>
+        </Tarjeta>
+      </div>
+
+      <div className="mt-5 lg:mt-6">
+        <Tarjeta titulo="Horarios habituales" subtitulo="Lugares reservados de forma fija: aparece automáticamente en cada clase futura, sin volver a reservar cada semana.">
+          {horariosHabituales.length === 0 ? (
+            <p className="py-6 text-center text-sm text-ink-soft">Sin horarios habituales asignados.</p>
+          ) : (
+            <ul className="divide-y divide-line/70">
+              {horariosHabituales.map((h) => (
+                <li key={h.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-ink">{nombreDia(h.dia as Dia)} {h.hora}</p>
+                    <p className="text-xs text-ink-soft">{h.disciplinaNombre} · {h.profesoraNombre}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => setPanel({ tipo: "horarioCambiar", horario: h })}>Cambiar</button>
+                    <button type="button" className="btn btn-outline btn-sm" onClick={() => setPanel({ tipo: "horarioQuitar", horario: h })}>Quitar</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-5 border-t border-line pt-4">
+            <button type="button" className="btn btn-primary btn-sm w-full sm:w-auto" onClick={() => setPanel({ tipo: "horarioAgregar" })}>
+              <CalendarClock size={14} /> Agregar horario
             </button>
           </div>
         </Tarjeta>
@@ -346,6 +385,38 @@ export function FichaAlumnaReal({
       {panel?.tipo === "retenerSena" && (
         <Modal titulo="Marcar seña como retenida" onCerrar={cerrar}>
           <RetenerSenaConfirm senaId={panel.senaId} onCancelar={cerrar} onConfirmado={() => { cerrar(); toast("Seña marcada como retenida."); refrescar(); }} />
+        </Modal>
+      )}
+
+      {panel?.tipo === "horarioAgregar" && (
+        <Modal titulo="Agregar horario habitual" onCerrar={cerrar}>
+          <HorarioAgregarForm
+            alumnaId={alumna.id}
+            clasesDisponibles={clasesDisponibles.filter((c) => !horariosHabituales.some((h) => h.claseRecurrenteId === c.id))}
+            onCancelar={cerrar}
+            onGuardado={() => { cerrar(); toast("Horario agregado."); refrescar(); }}
+          />
+        </Modal>
+      )}
+
+      {panel?.tipo === "horarioCambiar" && (
+        <Modal titulo={`Cambiar horario: ${nombreDia(panel.horario.dia as Dia)} ${panel.horario.hora}`} onCerrar={cerrar}>
+          <HorarioCambiarForm
+            horarioHabitualId={panel.horario.id}
+            clasesDisponibles={clasesDisponibles.filter((c) => c.id !== panel.horario.claseRecurrenteId && !horariosHabituales.some((h) => h.claseRecurrenteId === c.id))}
+            onCancelar={cerrar}
+            onGuardado={() => { cerrar(); toast("Horario cambiado."); refrescar(); }}
+          />
+        </Modal>
+      )}
+
+      {panel?.tipo === "horarioQuitar" && (
+        <Modal titulo="Quitar horario habitual" onCerrar={cerrar}>
+          <HorarioQuitarConfirm
+            horario={panel.horario}
+            onCancelar={cerrar}
+            onConfirmado={() => { cerrar(); toast("Horario quitado."); refrescar(); }}
+          />
         </Modal>
       )}
     </main>
@@ -656,6 +727,126 @@ function RetenerSenaConfirm({ senaId, onCancelar, onConfirmado }: { senaId: stri
           }}
         >
           {enviando ? "Guardando…" : "Sí, marcar como retenida"}
+        </button>
+        <button type="button" className="btn btn-outline btn-sm" onClick={onCancelar} disabled={enviando}>No, volver</button>
+      </div>
+    </div>
+  );
+}
+
+function opcionTexto(c: ClaseRecurrenteOpcion) {
+  const completa = c.ocupacion >= c.cupo ? " · completa" : "";
+  return `${nombreDia(c.dia as Dia)} ${c.hora} — ${c.disciplinaNombre} (${c.profesoraNombre}) · ${c.ocupacion}/${c.cupo}${completa}`;
+}
+
+function HorarioAgregarForm({
+  alumnaId, clasesDisponibles, onCancelar, onGuardado,
+}: { alumnaId: string; clasesDisponibles: ClaseRecurrenteOpcion[]; onCancelar: () => void; onGuardado: () => void }) {
+  const [claseRecurrenteId, setClaseRecurrenteId] = useState(clasesDisponibles[0]?.id ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+
+  if (clasesDisponibles.length === 0) {
+    return (
+      <div>
+        <p className="text-sm text-ink-soft">La alumna ya tiene un horario habitual asignado en todas las clases activas, o no hay clases disponibles.</p>
+        <div className="mt-6"><button type="button" className="btn btn-outline btn-sm" onClick={onCancelar}>Cerrar</button></div>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setEnviando(true); setError(null);
+        const r = await asignarHorarioHabitualAction(alumnaId, claseRecurrenteId);
+        setEnviando(false);
+        if (!r.ok) { setError(r.error); return; }
+        onGuardado();
+      }}
+    >
+      <Selector label="Clase" name="claseRecurrenteId" required value={claseRecurrenteId} onChange={(e) => setClaseRecurrenteId(e.target.value)}>
+        {clasesDisponibles.map((c) => (
+          <option key={c.id} value={c.id} disabled={c.ocupacion >= c.cupo}>{opcionTexto(c)}</option>
+        ))}
+      </Selector>
+      {error && <p role="alert" className="mt-4 rounded-2xl bg-amber-soft px-4 py-3 text-sm leading-snug text-amber-ink">{error}</p>}
+      <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+        <button type="submit" disabled={enviando} className="btn btn-sage btn-sm disabled:opacity-60">{enviando ? "Guardando…" : "Agregar"}</button>
+        <button type="button" className="btn btn-outline btn-sm" onClick={onCancelar} disabled={enviando}>Cancelar</button>
+      </div>
+    </form>
+  );
+}
+
+function HorarioCambiarForm({
+  horarioHabitualId, clasesDisponibles, onCancelar, onGuardado,
+}: { horarioHabitualId: string; clasesDisponibles: ClaseRecurrenteOpcion[]; onCancelar: () => void; onGuardado: () => void }) {
+  const [claseRecurrenteId, setClaseRecurrenteId] = useState(clasesDisponibles[0]?.id ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+
+  if (clasesDisponibles.length === 0) {
+    return (
+      <div>
+        <p className="text-sm text-ink-soft">No hay otra clase disponible para cambiar (todas las demás ya la tiene asignada, o están completas).</p>
+        <div className="mt-6"><button type="button" className="btn btn-outline btn-sm" onClick={onCancelar}>Cerrar</button></div>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setEnviando(true); setError(null);
+        const r = await cambiarHorarioHabitualAction(horarioHabitualId, claseRecurrenteId);
+        setEnviando(false);
+        if (!r.ok) { setError(r.error); return; }
+        onGuardado();
+      }}
+    >
+      <Selector label="Nueva clase" name="claseRecurrenteId" required value={claseRecurrenteId} onChange={(e) => setClaseRecurrenteId(e.target.value)}>
+        {clasesDisponibles.map((c) => (
+          <option key={c.id} value={c.id} disabled={c.ocupacion >= c.cupo}>{opcionTexto(c)}</option>
+        ))}
+      </Selector>
+      {error && <p role="alert" className="mt-4 rounded-2xl bg-amber-soft px-4 py-3 text-sm leading-snug text-amber-ink">{error}</p>}
+      <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+        <button type="submit" disabled={enviando} className="btn btn-sage btn-sm disabled:opacity-60">{enviando ? "Guardando…" : "Cambiar"}</button>
+        <button type="button" className="btn btn-outline btn-sm" onClick={onCancelar} disabled={enviando}>Cancelar</button>
+      </div>
+    </form>
+  );
+}
+
+function HorarioQuitarConfirm({
+  horario, onCancelar, onConfirmado,
+}: { horario: HorarioHabitualFicha; onCancelar: () => void; onConfirmado: () => void }) {
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div role="alertdialog">
+      <p className="text-sm leading-relaxed text-ink-soft">
+        ¿Quitar el horario de {nombreDia(horario.dia as Dia)} {horario.hora} ({horario.disciplinaNombre})? La alumna deja de aparecer
+        automáticamente en las próximas clases de ese horario. Las clases ya pasadas no se modifican.
+      </p>
+      {error && <p role="alert" className="mt-4 rounded-2xl bg-amber-soft px-4 py-3 text-sm leading-snug text-amber-ink">{error}</p>}
+      <div className="mt-6 flex flex-col gap-2.5 sm:flex-row">
+        <button
+          type="button" disabled={enviando}
+          className="btn btn-sm bg-amber-ink text-white hover:bg-taupe-dark disabled:opacity-60"
+          onClick={async () => {
+            setEnviando(true); setError(null);
+            const r = await quitarHorarioHabitualAction(horario.id);
+            setEnviando(false);
+            if (!r.ok) { setError(r.error); return; }
+            onConfirmado();
+          }}
+        >
+          {enviando ? "Guardando…" : "Sí, quitar"}
         </button>
         <button type="button" className="btn btn-outline btn-sm" onClick={onCancelar} disabled={enviando}>No, volver</button>
       </div>

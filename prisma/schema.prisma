@@ -29,27 +29,28 @@ enum Role {
 }
 
 model User {
-  id          String   @id @default(cuid())
-  email       String   @unique
+  id                 String    @id @default(cuid())
+  email              String    @unique
   /// Formato "salt:hash" (scrypt). Nunca texto plano.
-  passwordHash String
-  role        Role
+  passwordHash       String
+  role               Role
   /// Nombre a mostrar en la interfaz (ej. "Graziella", "Vicky y Amy").
-  displayName String
-  isActive    Boolean  @default(true)
+  displayName        String
+  isActive           Boolean   @default(true)
   /// Cuenta de soporte/desarrollo (Martina): queda identificada para poder desactivarla o borrarla.
-  isSupport   Boolean  @default(false)
+  isSupport          Boolean   @default(false)
   /// Obliga a cambiar la contraseña en el próximo ingreso (cuentas recién sembradas o tras un reset).
-  mustChangePassword Boolean @default(true)
-  lastLoginAt DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  mustChangePassword Boolean   @default(true)
+  lastLoginAt        DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
-  sessions            Session[]
-  passwordResetTokens PasswordResetToken[]
-  auditLogs           AuditLog[]
-  alumna              Alumna?
-  senasRegistradas    Sena[]
+  sessions                    Session[]
+  passwordResetTokens         PasswordResetToken[]
+  auditLogs                   AuditLog[]
+  alumna                      Alumna?
+  senasRegistradas            Sena[]
+  horariosHabitualesAsignados HorarioHabitual[]
 
   @@index([role])
 }
@@ -82,16 +83,16 @@ model PasswordResetToken {
 
 /// Auditoría base de acciones sensibles. Nunca guarda contraseñas, tokens ni comprobantes completos.
 model AuditLog {
-  id         String   @id @default(cuid())
+  id          String   @id @default(cuid())
   actorUserId String?
-  actor      User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+  actor       User?    @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
   /// Copia del rol al momento de la acción (se conserva aunque el usuario cambie de rol después).
-  actorRole  Role?
-  action     String
-  entityType String
-  entityId   String?
-  metadata   Json?
-  createdAt  DateTime @default(now())
+  actorRole   Role?
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
 
   @@index([actorUserId])
   @@index([entityType, entityId])
@@ -106,32 +107,32 @@ model AuditLog {
 // ---------------------------------------------------------------------------
 
 model Alumna {
-  id        String   @id @default(cuid())
+  id           String   @id @default(cuid())
   /// Cuenta de login vinculada (rol STUDENT). Opcional: puede existir una ficha sin cuenta todavía.
-  userId    String?  @unique
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  nombre    String
-  apellido  String
-  telefono  String?
+  userId       String?  @unique
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  nombre       String
+  apellido     String
+  telefono     String?
   /// Normalizado (solo dígitos) antes de guardar, para que la unicidad sea real. Null si no se conoce.
-  dni       String?  @unique
-  email     String?
+  dni          String?  @unique
+  email        String?
   /// Texto libre migrado de la planilla histórica (ej. "Pilates Ref, Metodo Barre"). No vincula
   /// todavía con ClaseRecurrente: eso se resuelve en el bloque de grilla real de alumnas.
-  disciplinas   String?
+  disciplinas  String?
   /// Texto libre migrado (ej. "Lunes 17hs y Miercoles 18hs"). Mismo motivo que `disciplinas`.
-  diasHorarios  String?
-  activa    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  diasHorarios String?
+  activa       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  comprasPack    CompraPack[]
-  senas          Sena[]
-  pagos          Pago[]
-  comprobantes   Comprobante[]
-  asistencias    Asistencia[]
-  ausencias      Ausencia[]
-  recuperaciones Recuperacion[]
+  comprasPack        CompraPack[]
+  senas              Sena[]
+  pagos              Pago[]
+  comprobantes       Comprobante[]
+  asistencias        Asistencia[]
+  recuperaciones     Recuperacion[]
+  horariosHabituales HorarioHabitual[]
 }
 
 model Profesora {
@@ -158,26 +159,52 @@ model Disciplina {
 }
 
 model ClaseRecurrente {
-  id            String   @id @default(cuid())
-  disciplinaId  String
-  disciplina    Disciplina @relation(fields: [disciplinaId], references: [id], onDelete: Restrict)
-  profesoraId   String
-  profesora     Profesora  @relation(fields: [profesoraId], references: [id], onDelete: Restrict)
+  id           String     @id @default(cuid())
+  disciplinaId String
+  disciplina   Disciplina @relation(fields: [disciplinaId], references: [id], onDelete: Restrict)
+  profesoraId  String
+  profesora    Profesora  @relation(fields: [profesoraId], references: [id], onDelete: Restrict)
   /// "lunes".."viernes", igual que Dia en lib/data/horarios.ts.
-  dia           String
+  dia          String
   /// "HH:MM"
-  hora          String
+  hora         String
   /// Capacidad máxima de la clase. Editable por clase (no hay un valor fijo único para todas).
-  cupo          Int
+  cupo         Int
   /// Baja lógica: no se borra la fila (preserva historial de ocurrencias/asistencia futura).
-  activa        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  activa       Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  ocurrencias ClaseOcurrencia[]
+  ocurrencias        ClaseOcurrencia[]
+  horariosHabituales HorarioHabitual[]
 
   /// Un solo horario recurrente por día+hora (la grilla del estudio no admite dos clases en el mismo lugar).
   @@unique([dia, hora])
+}
+
+/// Lugar reservado de una alumna en una ClaseRecurrente ("horario habitual"). Mientras esté vigente
+/// (hasta = null), la alumna aparece automáticamente en cada ocurrencia futura de esa clase, sin
+/// tener que volver a reservar cada semana (Bloque 5, sección 2-3). `diasHorarios` en Alumna queda
+/// como referencia histórica del Excel importado: esta tabla es la fuente de verdad operativa.
+model HorarioHabitual {
+  id                String          @id @default(cuid())
+  alumnaId          String
+  alumna            Alumna          @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  claseRecurrenteId String
+  claseRecurrente   ClaseRecurrente @relation(fields: [claseRecurrenteId], references: [id], onDelete: Restrict)
+  desde             DateTime        @default(now())
+  /// null = vigente. "Quitar horario" completa esta fecha (baja lógica: nunca se borra la fila,
+  /// así se conserva desde cuándo tuvo cada horario para historial/liquidación de profesoras).
+  hasta             DateTime?
+  creadoPorUserId   String?
+  creadoPor         User?           @relation(fields: [creadoPorUserId], references: [id], onDelete: SetNull)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  asistencias Asistencia[]
+
+  @@index([alumnaId])
+  @@index([claseRecurrenteId])
 }
 
 enum EstadoOcurrencia {
@@ -190,21 +217,20 @@ enum EstadoOcurrencia {
 /// Fecha/disciplina/profesora "programada" se leen siempre desde claseRecurrente (no se duplican acá);
 /// profesoraRealId existe para registrar reemplazos cuando quien dio la clase no fue la programada.
 model ClaseOcurrencia {
-  id                String   @id @default(cuid())
+  id                String           @id @default(cuid())
   claseRecurrenteId String
-  claseRecurrente   ClaseRecurrente @relation(fields: [claseRecurrenteId], references: [id], onDelete: Cascade)
+  claseRecurrente   ClaseRecurrente  @relation(fields: [claseRecurrenteId], references: [id], onDelete: Cascade)
   fecha             DateTime
   /// Quién dictó efectivamente la clase, si difiere (o se confirmó) respecto de claseRecurrente.profesora.
   /// null = todavía sin confirmar / se asume la profesora programada.
   profesoraRealId   String?
-  profesoraReal     Profesora? @relation(fields: [profesoraRealId], references: [id], onDelete: SetNull)
+  profesoraReal     Profesora?       @relation(fields: [profesoraRealId], references: [id], onDelete: SetNull)
   estado            EstadoOcurrencia @default(PROGRAMADA)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  asistencias            Asistencia[]
-  ausencias              Ausencia[]
-  recuperacionesDestino  Recuperacion[]
+  asistencias           Asistencia[]
+  recuperacionesDestino Recuperacion[]
 
   @@unique([claseRecurrenteId, fecha])
 }
@@ -236,11 +262,11 @@ enum EstadoCompraPack {
 /// la anterior). planPackId es opcional: los packs "atípicos" del historial (clase suelta, packs
 /// personalizados, sin cargo, excepciones) no corresponden a ningún plan comercial estándar.
 model CompraPack {
-  id                String   @id @default(cuid())
+  id                String           @id @default(cuid())
   alumnaId          String
-  alumna            Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  alumna            Alumna           @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
   planPackId        String?
-  planPack          PlanPack? @relation(fields: [planPackId], references: [id], onDelete: SetNull)
+  planPack          PlanPack?        @relation(fields: [planPackId], references: [id], onDelete: SetNull)
   /// Snapshot: cantidad de clases realmente contratadas en ESTA compra (puede diferir del plan
   /// estándar por excepciones históricas).
   clasesContratadas Int
@@ -249,16 +275,18 @@ model CompraPack {
   fechaInicio       DateTime
   /// Opcional: hay compras históricas sin fecha de fin registrada.
   fechaFin          DateTime?
-  clasesTomadas     Int      @default(0)
-  clasesRestantes   Int      @default(0)
+  clasesTomadas     Int              @default(0)
+  clasesRestantes   Int              @default(0)
   estado            EstadoCompraPack @default(ACTIVO)
   /// Notas libres traídas de la migración histórica (excepciones, extensiones, aclaraciones).
   notas             String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
-  pagos Pago[]
-  senas Sena[]
+  pagos                 Pago[]
+  senas                 Sena[]
+  asistenciasConsumidas Asistencia[]
+  recuperaciones        Recuperacion[]
 
   @@index([alumnaId])
 }
@@ -273,50 +301,50 @@ enum EstadoSena {
 }
 
 model Sena {
-  id        String   @id @default(cuid())
-  alumnaId  String
-  alumna    Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
-  monto     Int
+  id                  String      @id @default(cuid())
+  alumnaId            String
+  alumna              Alumna      @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  monto               Int
   /// Fecha real de la seña (puede diferir de createdAt si se carga con demora).
-  fecha     DateTime @default(now())
+  fecha               DateTime    @default(now())
   /// "Efectivo" / "Transferencia". Opcional por si se registra sin especificar todavía.
-  medio     String?
-  estado    EstadoSena @default(PENDIENTE)
+  medio               String?
+  estado              EstadoSena  @default(PENDIENTE)
   /// A qué compra se aplicó, cuando estado=APLICADA.
-  compraPackId     String?
-  compraPack       CompraPack? @relation(fields: [compraPackId], references: [id], onDelete: SetNull)
-  fechaAplicacion  DateTime?
+  compraPackId        String?
+  compraPack          CompraPack? @relation(fields: [compraPackId], references: [id], onDelete: SetNull)
+  fechaAplicacion     DateTime?
   /// Quién la registró/confirmó (queda además en AuditLog).
   registradoPorUserId String?
-  registradoPor       User?   @relation(fields: [registradoPorUserId], references: [id], onDelete: SetNull)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  registradoPor       User?       @relation(fields: [registradoPorUserId], references: [id], onDelete: SetNull)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
 
   @@index([alumnaId])
   @@index([compraPackId])
 }
 
 model Pago {
-  id             String   @id @default(cuid())
-  alumnaId       String
-  alumna         Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  id            String       @id @default(cuid())
+  alumnaId      String
+  alumna        Alumna       @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
   /// A qué compra de pack corresponde este pago, cuando se puede determinar.
-  compraPackId   String?
-  compraPack     CompraPack? @relation(fields: [compraPackId], references: [id], onDelete: SetNull)
-  monto          Int
+  compraPackId  String?
+  compraPack    CompraPack?  @relation(fields: [compraPackId], references: [id], onDelete: SetNull)
+  monto         Int
   /// Libre: "Efectivo" / "Transferencia" para operaciones nuevas. Valores históricos como
   /// "Mercado Pago" se preservan tal cual (no se ofrecen en el alta de pagos nuevos, pero no se
   /// fuerzan a otro valor). Opcional: algunos registros históricos confirman el pago sin dejar
   /// asentado el método — no se inventa un valor.
-  medio          String?
-  estado         String
+  medio         String?
+  estado        String
   /// Fecha real en que se registró el pago (histórica). Distinta de `createdAt`, que es cuándo
   /// se creó la fila en este sistema. Opcional: hay algún registro histórico confirmado sin fecha.
-  fechaPago      DateTime?
-  comprobanteId  String?  @unique
-  comprobante    Comprobante? @relation(fields: [comprobanteId], references: [id], onDelete: SetNull)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  fechaPago     DateTime?
+  comprobanteId String?      @unique
+  comprobante   Comprobante? @relation(fields: [comprobanteId], references: [id], onDelete: SetNull)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([alumnaId])
   @@index([compraPackId])
@@ -338,43 +366,96 @@ model Comprobante {
   @@index([alumnaId])
 }
 
+enum EstadoAsistencia {
+  /// Tiene lugar reservado para esa ocurrencia, todavía sin registrar qué pasó (Bloque 5, sección 12-13).
+  PENDIENTE
+  PRESENTE
+  /// Avisó que no asiste. avisoValido indica si cumplió las 3 horas mínimas (sección 16-17).
+  AUSENTE_CON_AVISO
+  AUSENTE_SIN_AVISO
+}
+
+enum TipoReserva {
+  /// El lugar viene de un HorarioHabitual vigente para esa ClaseRecurrente.
+  HABITUAL
+  /// El lugar fue asignado como recuperación de una ausencia anterior (Bloque 6).
+  RECUPERACION
+}
+
+/// Une en una sola fila el "lugar reservado" y su resultado real (reemplaza los antiguos modelos
+/// separados Asistencia(bool)/Ausencia del Bloque 2: representaban el mismo evento por
+/// alumna+ocurrencia y mantenerlos separados obligaba a sincronizar dos tablas a mano). Se crea
+/// una fila por alumna+ocurrencia recién cuando hay algo que registrar (ver lib/grilla/calculos.ts
+/// para cómo se calculan los lugares habituales que todavía NO tienen fila, que se consideran
+/// PENDIENTE implícito).
 model Asistencia {
-  id                String   @id @default(cuid())
+  id                String          @id @default(cuid())
   alumnaId          String
-  alumna            Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  alumna            Alumna          @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
   claseOcurrenciaId String
   claseOcurrencia   ClaseOcurrencia @relation(fields: [claseOcurrenciaId], references: [id], onDelete: Cascade)
-  presente          Boolean
-  createdAt         DateTime @default(now())
+
+  tipoReserva       TipoReserva      @default(HABITUAL)
+  horarioHabitualId String?
+  horarioHabitual   HorarioHabitual? @relation(fields: [horarioHabitualId], references: [id], onDelete: SetNull)
+
+  estado EstadoAsistencia @default(PENDIENTE)
+
+  /// Solo relevante cuando estado = AUSENTE_CON_AVISO: cuándo avisó y si el servidor determinó que
+  /// llegó a tiempo (mínimo 3 horas antes de la clase). Nunca se confía en el cálculo del frontend.
+  avisoFecha  DateTime?
+  avisoValido Boolean?
+
+  /// Qué CompraPack se descontó por esta fila (PRESENTE, AUSENTE_SIN_AVISO, o AUSENTE_CON_AVISO
+  /// fuera de término). Null mientras está PENDIENTE, y también mientras es una ausencia con aviso
+  /// VÁLIDO a la espera de recuperación: ese caso todavía no consume nada (ver Recuperacion).
+  compraPackConsumidoId String?
+  compraPackConsumido   CompraPack? @relation(fields: [compraPackConsumidoId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recuperacionOrigen Recuperacion?
 
   @@unique([alumnaId, claseOcurrenciaId])
+  @@index([claseOcurrenciaId])
+  @@index([compraPackConsumidoId])
 }
 
-model Ausencia {
-  id                String   @id @default(cuid())
-  alumnaId          String
-  alumna            Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
-  claseOcurrenciaId String
-  claseOcurrencia   ClaseOcurrencia @relation(fields: [claseOcurrenciaId], references: [id], onDelete: Cascade)
-  motivo            String?
-  createdAt         DateTime @default(now())
-
-  recuperacion Recuperacion?
-
-  @@unique([alumnaId, claseOcurrenciaId])
+enum EstadoRecuperacion {
+  /// Derecho vigente, todavía sin asignar a una clase destino (Bloque 6 asigna claseOcurrenciaDestinoId).
+  PENDIENTE
+  /// Asistió a la clase de recuperación: se resolvió el consumo (caso A, sección 22).
+  UTILIZADA
+  /// Faltó a la clase de recuperación asignada: se pierde (caso B, sección 22).
+  PERDIDA
+  /// Venció el plazo de 7 días sin recuperarla (caso C, sección 22).
+  VENCIDA
 }
 
+/// Derecho pendiente de recuperar una clase, generado por una Asistencia AUSENTE_CON_AVISO válida.
+/// No representa por sí misma un consumo: el pack fijado en compraPackId recién se descuenta cuando
+/// se resuelve (Bloque 6: asiste a la recuperación, falta a ella, o vence el plazo). Fijar el pack
+/// acá desde el momento de la ausencia evita ambigüedad futura sobre qué pack corresponde descontar.
 model Recuperacion {
-  id                        String   @id @default(cuid())
-  alumnaId                  String
-  alumna                    Alumna   @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
-  ausenciaId                String?  @unique
-  ausencia                  Ausencia? @relation(fields: [ausenciaId], references: [id], onDelete: SetNull)
-  claseOcurrenciaDestinoId   String?
-  claseOcurrenciaDestino     ClaseOcurrencia? @relation(fields: [claseOcurrenciaDestinoId], references: [id], onDelete: SetNull)
-  estado                    String
-  createdAt                 DateTime @default(now())
-  updatedAt                 DateTime @updatedAt
+  id                       String             @id @default(cuid())
+  alumnaId                 String
+  alumna                   Alumna             @relation(fields: [alumnaId], references: [id], onDelete: Cascade)
+  asistenciaOrigenId       String             @unique
+  asistenciaOrigen         Asistencia         @relation(fields: [asistenciaOrigenId], references: [id], onDelete: Cascade)
+  compraPackId             String
+  compraPack               CompraPack         @relation(fields: [compraPackId], references: [id], onDelete: Restrict)
+  /// Fecha de la clase original + 7 días, inclusive (mismo día de la semana siguiente). Nunca se
+  /// calcula desde la fecha en que Administración carga la ausencia.
+  fechaLimite              DateTime
+  estado                   EstadoRecuperacion @default(PENDIENTE)
+  /// Bloque 6: ocurrencia elegida como destino de la recuperación.
+  claseOcurrenciaDestinoId String?
+  claseOcurrenciaDestino   ClaseOcurrencia?   @relation(fields: [claseOcurrenciaDestinoId], references: [id], onDelete: SetNull)
+  createdAt                DateTime           @default(now())
+  updatedAt                DateTime           @updatedAt
 
   @@index([alumnaId])
+  @@index([estado])
+  @@index([fechaLimite])
 }
